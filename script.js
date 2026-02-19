@@ -1,10 +1,38 @@
 const { createApp } = Vue;
 
-// 模擬 TOEIC 單字池 (實際開發建議放入 JSON 檔案)
+// 單字池範例（請確保每個單字都有 chinese_ex，且長度與 examples 相同）
 const TOEIC_POOL = [
-    { word: "Purchase", phonetic: "/ˈpɜːrtʃəs/", chinese: "購買", examples: ["Keep your receipt as proof of purchase.", "The land was a strategic purchase.", "You can purchase tickets online."] },
-    { word: "Agenda", phonetic: "/əˈdʒendə/", chinese: "議程", examples: ["What's on the agenda for today?", "The committee set the agenda.", "Next item on the agenda is the budget."] },
-    // ... 在此擴充更多單字
+    { 
+        word: "Purchase", 
+        phonetic: "/ˈpɜːrtʃəs/", 
+        chinese: "購買", 
+        examples: [
+            "Keep your receipt as proof of purchase.", 
+            "The land was a strategic purchase.", 
+            "You can purchase tickets online."
+        ],
+        chinese_ex: [
+            "請保留收據作為購買憑證。",
+            "這塊土地是一次戰略性收購。",
+            "你可以點擊網頁購買門票。"
+        ]
+    },
+    { 
+        word: "Agenda", 
+        phonetic: "/əˈdʒendə/", 
+        chinese: "議程", 
+        examples: [
+            "What's on the agenda for today?", 
+            "The committee set the agenda.", 
+            "Next item on the agenda is the budget."
+        ],
+        chinese_ex: [
+            "今天的議程有哪些事項？",
+            "委員會設定了議程。",
+            "議程的下一個項目是預算。"
+        ]
+    }
+    // 您可以在此繼續手動新增更多單字...
 ];
 
 createApp({
@@ -13,7 +41,6 @@ createApp({
             currentTab: 'daily',
             dailyWords: [],
             wordBank: JSON.parse(localStorage.getItem('myWords') || '[]'),
-            // 測驗相關
             quizWords: [],
             currentQuizIndex: 0,
             currentOptions: [],
@@ -26,8 +53,22 @@ createApp({
     },
     methods: {
         generateDailyWords() {
-            // 從池子裡隨機抓 30 個 (範例池子不夠時會全抓)
+            // 初始隨機抓取 30 個
             this.dailyWords = [...TOEIC_POOL].sort(() => 0.5 - Math.random()).slice(0, 30);
+        },
+        // --- 新增功能：獲取一個新單字 ---
+        getOneMoreWord() {
+            // 過濾掉目前畫面上已經有的單字
+            const existingWords = this.dailyWords.map(w => w.word);
+            const availableWords = TOEIC_POOL.filter(w => !existingWords.includes(w.word));
+
+            if (availableWords.length > 0) {
+                const randomIndex = Math.floor(Math.random() * availableWords.length);
+                // 將新單字加入到列表的最前面
+                this.dailyWords.unshift(availableWords[randomIndex]);
+            } else {
+                alert("單字池中沒有更多新單字了！");
+            }
         },
         speak(text) {
             const msg = new SpeechSynthesisUtterance(text);
@@ -59,8 +100,9 @@ createApp({
         },
         generateOptions() {
             const correct = this.quizWords[this.currentQuizIndex].chinese;
-            // 從所有池子抓錯誤選項
             let wrongOptions = TOEIC_POOL.map(w => w.chinese).filter(c => c !== correct);
+            // 去除重複的中文意思
+            wrongOptions = [...new Set(wrongOptions)];
             wrongOptions = wrongOptions.sort(() => 0.5 - Math.random()).slice(0, 2);
             
             this.currentOptions = [correct, ...wrongOptions].sort(() => 0.5 - Math.random());
