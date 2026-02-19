@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能英文學習</title>
+    <title>AI 英文學習工具</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <style>[v-cloak] { display: none; }</style>
+    <style>
+        [v-cloak] { display: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 10px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ex-item { background: #f9f9f9; padding: 10px; margin: 8px 0; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .ex-text { flex: 1; }
+        .btn-play-mini { background: #fff; border: 1px solid #ddd; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; margin-left: 10px; }
+    </style>
 </head>
 <body>
     <div id="app" v-cloak>
         <nav class="tabs">
-            <button @click="currentTab = 'daily'" :class="{ active: currentTab === 'daily' }">自動探索</button>
+            <button @click="currentTab = 'daily'" :class="{ active: currentTab === 'daily' }">日常推薦</button>
             <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">單字庫 ({{ wordBank.length }})</button>
             <button @click="startQuiz" :class="{ active: currentTab === 'quiz' }">測驗</button>
         </nav>
@@ -19,42 +26,57 @@
         <section v-if="currentTab === 'daily'">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2 style="margin:0;">網路自動抓取</h2>
-                <button @click="fetchAllData" :disabled="loading" class="btn-refresh" :style="{ backgroundColor: loading ? '#ccc' : '#28a745' }">
-                    {{ loading ? 'AI 翻譯中...' : '🔄 刷新 10 個常用字' }}
+                <button @click="fetchAllData" :disabled="loading" style="padding:10px; border-radius:5px; border:none; background:#28a745; color:white; font-weight:bold; cursor:pointer;">
+                    {{ loading ? '抓取與翻譯中...' : '🔄 刷新 10 個單字' }}
                 </button>
             </div>
 
             <div v-if="loading" style="text-align:center; padding: 50px;">
                 <div class="loader"></div>
-                <p>正在從網路字典與 Google 翻譯抓取資料...</p>
+                <p>AI 正在翻譯單字與例句...</p>
             </div>
 
             <div v-else v-for="w in dailyWords" :key="w.word" class="word-card">
                 <div class="word-header">
-                    <h3>{{ w.word }} <small class="phonetic">{{ w.phonetic }}</small></h3>
+                    <h3>{{ w.word }} <small style="color:#666; font-weight:normal;">{{ w.phonetic }}</small></h3>
                     <div class="actions">
                         <button @click="speak(w.word)">🔊 撥放</button>
                         <button @click="addToBank(w)" :disabled="isInBank(w.word)">
-                            {{ isInBank(w.word) ? '已存' : '存入' }}
+                            {{ isInBank(w.word) ? '已存入' : '📥 存入' }}
                         </button>
                     </div>
                 </div>
-                <p><strong>中文翻譯：</strong> <span style="color:#d9534f; font-weight:bold;">{{ w.chinese }}</span></p>
-                <ul class="examples">
-                    <li v-for="(ex, index) in w.examples" :key="index">
-                        <div class="ex-box">
-                            <div class="ex-content">
-                                <div class="ex-en">{{ ex }}</div>
-                                <div class="ex-zh">{{ w.chinese_ex[index] }}</div>
-                            </div>
-                            <button @click="speak(ex)" class="btn-mini-play">▶️</button>
+                <p><strong>中文：</strong> <span style="color:#d9534f;">{{ w.chinese }}</span></p>
+                <div class="examples">
+                    <div v-for="(ex, i) in w.examples" :key="i" class="ex-item">
+                        <div class="ex-text">
+                            <div style="font-weight:500; color:#333;">{{ ex }}</div>
+                            <div style="font-size:0.85em; color:#777;">{{ w.chinese_ex[i] }}</div>
                         </div>
-                    </li>
-                </ul>
+                        <button class="btn-play-mini" @click="speak(ex)">▶️</button>
+                    </div>
+                </div>
             </div>
         </section>
 
-        </div>
-    <script src="script.js"></script>
-</body>
-</html>
+        <section v-if="currentTab === 'bank'">
+            <h2>我的單字庫</h2>
+            <div v-if="wordBank.length === 0" style="text-align:center; padding:40px; color:#999;">目前沒單字，快去日常推薦找找吧！</div>
+            <div v-for="(w, index) in wordBank" :key="index" class="word-card" style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+                <div><strong>{{ w.word }}</strong> <small>({{ w.chinese }})</small></div>
+                <button @click="removeFromBank(index)" style="color:red; border:none; background:none; cursor:pointer;">移除</button>
+            </div>
+        </section>
+
+        <section v-if="currentTab === 'quiz'">
+            <div v-if="quizFinished" class="quiz-card">
+                <h2>測驗結束！</h2>
+                <div style="font-size:3em; color:#28a745; margin:20px 0;">{{ score }}</div>
+                <p>總分 100 分</p>
+                <button @click="startQuiz" style="width:100%; padding:12px; background:#007bff; color:white; border:none; border-radius:5px; cursor:pointer;">再測一次</button>
+            </div>
+            <div v-else-if="quizWords.length > 0" class="quiz-card">
+                <p>題目 {{ currentQuizIndex + 1 }} / {{ quizWords.length }}</p>
+                <div class="quiz-word" style="font-size:2.5em; font-weight:bold; margin:20px 0;">{{ quizWords[currentQuizIndex].word }}</div>
+                <div class="options">
+                    <button v-for="opt in currentOptions" @click="checkAnswer(opt)" style="display:block; width:100%; padding:15px; margin:1
