@@ -1,17 +1,20 @@
 const { createApp } = Vue;
 
-// 擴充單字池：包含拼音、中文、例句及翻譯
-const TOEIC_POOL = [
-    { word: "Purchase", phonetic: "/ˈpɜːrtʃəs/", chinese: "購買", examples: ["Keep your receipt as proof of purchase.", "The land was a strategic purchase.", "You can purchase tickets online."], chinese_ex: ["請保留收據作為購買憑證。", "這塊土地是一次戰略性的收購。", "你可以點擊網頁購買門票。"] },
-    { word: "Agenda", phonetic: "/əˈdʒendə/", chinese: "議程", examples: ["What's on the agenda for today?", "The committee set the agenda.", "Next item on the agenda is the budget."], chinese_ex: ["今天的議程有哪些事項？", "委員會設定了議程。", "議程的下一個項目是預算。"] },
-    { word: "Colleague", phonetic: "/ˈkɑːliːɡ/", chinese: "同事", examples: ["A colleague of mine is helping me.", "I’m going to lunch with my colleagues.", "She is a respected colleague."], chinese_ex: ["我的一位同事正在幫我。", "我要和我的同事們一起去吃午餐。", "她是一位受人尊敬的同事。"] },
-    { word: "Inventory", phonetic: "/ˈɪnvəntɔːri/", chinese: "庫存/盤點", examples: ["We need to take an inventory.", "The inventory is checked every month.", "Reduce our inventory levels."], chinese_ex: ["我們需要進行盤點。", "庫存每個月都會檢查一次。", "降低我們的庫存水平。"] },
-    { word: "Submit", phonetic: "/səbˈmɪt/", chinese: "提交/呈遞", examples: ["Submit your report by Friday.", "You must submit the application.", "I'll submit it to the manager."], chinese_ex: ["請在週五前提交你的報告。", "你必須提交申請。", "我會把它交給經理。"] },
-    { word: "Contract", phonetic: "/ˈkɑːntrækt/", chinese: "合約", examples: ["Please sign the contract.", "The contract expires next month.", "We need to renew the contract."], chinese_ex: ["請在合約上簽名。", "合約將於下個月到期。", "我們需要續約。"] },
-    { word: "Negotiate", phonetic: "/nɪˈɡoʊʃieɪt/", chinese: "談判/協商", examples: ["We need to negotiate a deal.", "They are negotiating the terms.", "I'm trying to negotiate a higher salary."], chinese_ex: ["我們需要商談一筆交易。", "他們正在協商條款。", "我正試著洽談更高的薪水。"] },
-    { word: "Postpone", phonetic: "/poʊstˈpoʊn/", chinese: "延期", examples: ["The meeting was postponed.", "We have to postpone the trip.", "Never postpone until tomorrow."], chinese_ex: ["會議被延期了。", "我們必須推遲旅行。", "永遠不要拖延到明天。"] },
-    { word: "Candidate", phonetic: "/ˈkændɪdət/", chinese: "候選人", examples: ["He is a strong candidate.", "We interviewed five candidates.", "The candidate has great experience."], chinese_ex: ["他是一位很強的候選人。", "我們面試了五位候選人。", "這位候選人經驗豐富。"] },
-    { word: "Efficiency", phonetic: "/ɪˈfɪʃnsi/", chinese: "效率", examples: ["We need to improve efficiency.", "Energy efficiency is important.", "The new system increased efficiency."], chinese_ex: ["我們需要提高效率。", "節能效率很重要。", "新系統提高了效率。"] }
+// 模擬從網路搜尋獲取的日常常用單字資料庫
+const COMMON_WORDS_DATABASE = [
+    { word: "Opportunity", phonetic: "/ˌɒpərˈtjuːnəti/", chinese: "機會", examples: ["Don't miss this opportunity.", "It's a great opportunity to learn.", "I had the opportunity to travel."], chinese_ex: ["不要錯過這個機會。", "這是學習的大好機會。", "我有機會去旅行。"] },
+    { word: "Commute", phonetic: "/kəˈmjuːt/", chinese: "通勤", examples: ["My daily commute takes an hour.", "He commutes by train.", "I hate commuting in the rain."], chinese_ex: ["我每天通勤需要一小時。", "他搭火車通勤。", "我討厭在雨天通勤。"] },
+    { word: "Collaborate", phonetic: "/kəˈlæbəreɪt/", chinese: "合作", examples: ["We need to collaborate on this.", "They collaborated with a famous artist.", "Let's collaborate to solve the problem."], chinese_ex: ["我們需要就此進行合作。", "他們與一位著名的藝術家合作。", "讓我們合作解決問題。"] },
+    { word: "Appreciate", phonetic: "/əˈpriːʃieɪt/", chinese: "感激/欣賞", examples: ["I really appreciate your help.", "You should appreciate the beauty of nature.", "We appreciate your feedback."], chinese_ex: ["我真的很感激你的幫助。", "你應該欣賞大自然的美。", "我們感謝您的回饋。"] },
+    { word: "Efficient", phonetic: "/ɪˈfɪʃnt/", chinese: "有效率的", examples: ["The new system is very efficient.", "She is an efficient worker.", "We need more efficient methods."], chinese_ex: ["新系統非常有效率。", "她是一位有效率的工作者。", "我們需要更有效率的方法。"] },
+    { word: "Guarantee", phonetic: "/ˌɡærənˈtiː/", chinese: "保證", examples: ["I guarantee you will like it.", "There is no guarantee of success.", "The product has a two-year guarantee."], chinese_ex: ["我保證你會喜歡它。", "不保證會成功。", "該產品有兩年保固。"] },
+    { word: "Potential", phonetic: "/pəˈtenʃl/", chinese: "潛力/潛在的", examples: ["He has great potential.", "The market has huge potential.", "Identify potential risks."], chinese_ex: ["他很有潛力。", "市場潛力巨大。", "識別潛在風險。"] },
+    { word: "Flexible", phonetic: "/ˈfleksəbl/", chinese: "靈活的/有彈性的", examples: ["My schedule is very flexible.", "Rubber is a flexible material.", "We need a flexible approach."], chinese_ex: ["我的行程非常有彈性。", "橡膠是一種柔韌的材料。", "我們需要靈活的方法。"] },
+    { word: "Relevant", phonetic: "/ˈreləvənt/", chinese: "相關的", examples: ["That's not relevant to the topic.", "Provide all relevant documents.", "Is this information relevant?"], chinese_ex: ["那與主題無關。", "提供所有相關文件。", "這項資訊相關嗎？"] },
+    { word: "Significant", phonetic: "/sɪɡˈnɪfɪkənt/", chinese: "顯著的/重要的", examples: ["There is a significant difference.", "This is a significant discovery.", "A significant amount of time."], chinese_ex: ["有顯著的差異。", "這是一個重大的發現。", "大量的時間。"] },
+    { word: "Analyze", phonetic: "/ˈænəlaɪz/", chinese: "分析", examples: ["We need to analyze the data.", "The blood samples are being analyzed.", "Analyze the results carefully."], chinese_ex: ["我們需要分析數據。", "血液樣本正在接受分析。", "仔細分析結果。"] },
+    { word: "Challenge", phonetic: "/ˈtʃælɪndʒ/", chinese: "挑戰", examples: ["It was a difficult challenge.", "I love a good challenge.", "We face many challenges."], chinese_ex: ["這是一個艱難的挑戰。", "我喜歡挑戰。", "我們面臨許多挑戰。"] }
+    // ... 可在此繼續加入更多日常單字
 ];
 
 createApp({
@@ -28,37 +31,26 @@ createApp({
         }
     },
     mounted() {
-        // 初始化時，隨機抓取最多 30 個單字顯示
-        this.initDailyWords();
+        this.refreshTenWords();
     },
     methods: {
-        initDailyWords() {
-            const count = Math.min(30, TOEIC_POOL.length);
-            this.dailyWords = [...TOEIC_POOL].sort(() => 0.5 - Math.random()).slice(0, count);
-        },
-        getOneMoreWord() {
-            const currentWords = this.dailyWords.map(w => w.word);
-            const available = TOEIC_POOL.filter(w => !currentWords.includes(w.word));
-            
-            if (available.length > 0) {
-                const newWord = available[Math.floor(Math.random() * available.length)];
-                // 確保 Vue 響應式更新：建立新陣列
-                this.dailyWords = [newWord, ...this.dailyWords];
-            } else {
-                alert("單字池已空，沒有更多新單字了！");
-            }
+        // --- 核心功能：刷新 10 個新單字 ---
+        refreshTenWords() {
+            // 從資料庫隨機取出 10 個
+            const shuffled = [...COMMON_WORDS_DATABASE].sort(() => 0.5 - Math.random());
+            this.dailyWords = shuffled.slice(0, 10);
+            // 每次刷新滾動到頂部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         speak(text) {
-            // 先停止所有正在播放的聲音，避免卡死
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
             msg.lang = 'en-US';
-            msg.rate = 0.9; // 稍微放慢一點點
+            msg.rate = 0.9;
             window.speechSynthesis.speak(msg);
         },
         addToBank(word) {
             if (!this.isInBank(word.word)) {
-                // 深拷貝物件，避免頁籤切換時的資料衝突
                 this.wordBank.push(JSON.parse(JSON.stringify(word)));
                 localStorage.setItem('myWords', JSON.stringify(this.wordBank));
             }
@@ -72,36 +64,26 @@ createApp({
         },
         startQuiz() {
             if (this.wordBank.length < 3) {
-                alert("單字庫至少要有 3 個單字才能開始測驗！");
-                this.currentTab = 'bank';
+                alert("單字庫至少要有 3 個單字才能測驗！");
                 return;
             }
-            // 從單字庫隨機抓取最多 50 個單字進行測驗
+            this.currentTab = 'quiz';
             this.quizWords = [...this.wordBank].sort(() => 0.5 - Math.random()).slice(0, 50);
             this.currentQuizIndex = 0;
             this.score = 0;
             this.quizFinished = false;
-            this.currentTab = 'quiz';
             this.generateOptions();
         },
         generateOptions() {
-            if (!this.quizWords[this.currentQuizIndex]) return;
             const correct = this.quizWords[this.currentQuizIndex].chinese;
-            
-            // 從總單字池抓取中文意思作為錯誤干擾項
-            let poolChinese = TOEIC_POOL.map(w => w.chinese);
-            let others = poolChinese.filter(c => c !== correct);
-            // 去重並隨機選 2 個
+            let others = COMMON_WORDS_DATABASE.map(w => w.chinese).filter(c => c !== correct);
             others = [...new Set(others)].sort(() => 0.5 - Math.random()).slice(0, 2);
-            
-            // 組合正確與錯誤選項並隨機排序
             this.currentOptions = [correct, ...others].sort(() => 0.5 - Math.random());
         },
         checkAnswer(ans) {
             if (ans === this.quizWords[this.currentQuizIndex].chinese) {
                 this.score += 2;
             }
-            
             if (this.currentQuizIndex < this.quizWords.length - 1) {
                 this.currentQuizIndex++;
                 this.generateOptions();
@@ -110,4 +92,4 @@ createApp({
             }
         }
     }
-}).mount('#app'); // 這行非常重要，負責啟動 Vue！
+}).mount('#app');
