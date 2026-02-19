@@ -1,69 +1,25 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOEIC 英文學習助手</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="app">
-        <nav class="tabs">
-            <button @click="currentTab = 'daily'" :class="{ active: currentTab === 'daily' }">每日推薦</button>
-            <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">單字庫 ({{ wordBank.length }})</button>
-            <button @click="startQuiz" :class="{ active: currentTab === 'quiz' }">練習測驗</button>
-        </nav>
-
-        <hr>
-
-        <section v-if="currentTab === 'daily'">
-            <h2>今日推薦單字 (30個)</h2>
-            <div v-for="w in dailyWords" :key="w.word" class="word-card">
-                <div class="word-header">
-                    <h3>{{ w.word }} <small>{{ w.phonetic }}</small></h3>
-                    <div class="actions">
-                        <button @click="speak(w.word)">🔊 播放</button>
-                        <button @click="addToBank(w)" :disabled="isInBank(w.word)">
-                            {{ isInBank(w.word) ? '已存入' : '存入單字庫' }}
-                        </button>
-                    </div>
-                </div>
-                <ul class="examples">
-                    <li v-for="ex in w.examples">{{ ex }}</li>
-                </ul>
-            </div>
-        </section>
-
-        <section v-if="currentTab === 'bank'">
-            <h2>我的單字庫</h2>
-            <div v-if="wordBank.length === 0">目前還沒有存入單字喔！</div>
-            <div v-for="(w, index) in wordBank" :key="index" class="word-item">
-                <span><strong>{{ w.word }}</strong> - {{ w.chinese }}</span>
-                <button @click="removeFromBank(index)">刪除</button>
-            </div>
-        </section>
-
-        <section v-if="currentTab === 'quiz'">
-            <div v-if="quizFinished">
-                <h2>測驗結束！</h2>
-                <p class="score">得分：{{ score }} / 100</p>
-                <button @click="startQuiz">重新測驗</button>
-            </div>
-            <div v-else-if="quizWords.length > 0">
-                <h2>測驗中 ({{ currentQuizIndex + 1 }} / {{ quizWords.length }})</h2>
-                <div class="quiz-card">
-                    <p class="quiz-word">{{ quizWords[currentQuizIndex].word }}</p>
-                    <div class="options">
-                        <button v-for="opt in currentOptions" @click="checkAnswer(opt)">
-                            {{ opt }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div v-else>單字庫至少需要 3 個單字才能開始測驗！</div>
-        </section>
+<section v-if="currentTab === 'daily'">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>今日推薦單字</h2>
+        <button @click="getOneMoreWord" style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">+ 獲取新單字</button>
     </div>
-    <script src="script.js"></script>
-</body>
-</html>
+
+    <div v-for="w in dailyWords" :key="w.word" class="word-card">
+        <div class="word-header">
+            <h3>{{ w.word }} <small>{{ w.phonetic }}</small></h3>
+            <div class="actions">
+                <button @click="speak(w.word)">🔊 播放</button>
+                <button @click="addToBank(w)" :disabled="isInBank(w.word)">
+                    {{ isInBank(w.word) ? '已存入' : '存入單字庫' }}
+                </button>
+            </div>
+        </div>
+        <p><strong>中文意思：</strong>{{ w.chinese }}</p>
+        <ul class="examples">
+            <li v-for="(ex, index) in w.examples" style="margin-bottom: 8px;">
+                <div>{{ ex }}</div>
+                <div style="color: #888; font-size: 0.85em;">{{ w.chinese_ex[index] }}</div>
+            </li>
+        </ul>
+    </div>
+</section>
