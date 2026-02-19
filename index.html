@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TOEIC 學習助手</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* 新增：在 Vue 沒載入前先隱藏原始碼，避免畫面出現 {{ }} */
+        [v-cloak] { display: none; }
+    </style>
 </head>
 <body>
-    <div id="app">
+   <div id="app" v-cloak>
         <nav class="tabs">
             <button @click="currentTab = 'daily'" :class="{ active: currentTab === 'daily' }">每日推薦</button>
             <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">我的單字 ({{ wordBank.length }})</button>
