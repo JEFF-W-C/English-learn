@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOEIC 英文學習助手</title>
+    <title>AI 智能英文學習</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>[v-cloak] { display: none; }</style>
@@ -11,67 +11,50 @@
 <body>
     <div id="app" v-cloak>
         <nav class="tabs">
-            <button @click="currentTab = 'daily'" :class="{ active: currentTab === 'daily' }">日常常用單字</button>
+            <button @click="currentTab = 'daily'" :class="{ active: currentTab === 'daily' }">自動探索</button>
             <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">單字庫 ({{ wordBank.length }})</button>
-            <button @click="startQuiz" :class="{ active: currentTab === 'quiz' }">練習測驗</button>
+            <button @click="startQuiz" :class="{ active: currentTab === 'quiz' }">測驗</button>
         </nav>
 
         <section v-if="currentTab === 'daily'">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin:0;">推薦單字</h2>
-                <button @click="refreshTenWords" style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🔄 刷新 10 個新單字</button>
+                <h2 style="margin:0;">網路自動抓取</h2>
+                <button @click="fetchAllData" :disabled="loading" class="btn-refresh" :style="{ backgroundColor: loading ? '#ccc' : '#28a745' }">
+                    {{ loading ? 'AI 翻譯中...' : '🔄 刷新 10 個常用字' }}
+                </button>
             </div>
 
-            <div v-for="w in dailyWords" :key="w.word" class="word-card">
+            <div v-if="loading" style="text-align:center; padding: 50px;">
+                <div class="loader"></div>
+                <p>正在從網路字典與 Google 翻譯抓取資料...</p>
+            </div>
+
+            <div v-else v-for="w in dailyWords" :key="w.word" class="word-card">
                 <div class="word-header">
                     <h3>{{ w.word }} <small class="phonetic">{{ w.phonetic }}</small></h3>
                     <div class="actions">
-                        <button @click="speak(w.word)">🔊 單字發音</button>
+                        <button @click="speak(w.word)">🔊 撥放</button>
                         <button @click="addToBank(w)" :disabled="isInBank(w.word)">
-                            {{ isInBank(w.word) ? '✅ 已存入' : '📥 存入單字庫' }}
+                            {{ isInBank(w.word) ? '已存' : '存入' }}
                         </button>
                     </div>
                 </div>
-                <p><strong>中文意思：</strong> {{ w.chinese }}</p>
+                <p><strong>中文翻譯：</strong> <span style="color:#d9534f; font-weight:bold;">{{ w.chinese }}</span></p>
                 <ul class="examples">
-                    <li v-for="(ex, index) in w.examples" :key="index" style="margin-bottom: 12px; position: relative;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div style="flex: 1;">
+                    <li v-for="(ex, index) in w.examples" :key="index">
+                        <div class="ex-box">
+                            <div class="ex-content">
                                 <div class="ex-en">{{ ex }}</div>
                                 <div class="ex-zh">{{ w.chinese_ex[index] }}</div>
                             </div>
-                            <button @click="speak(ex)" style="background: none; border: 1px solid #ccc; border-radius: 50%; width: 30px; height: 30px; font-size: 12px; cursor: pointer; margin-left: 10px;">▶️</button>
+                            <button @click="speak(ex)" class="btn-mini-play">▶️</button>
                         </div>
                     </li>
                 </ul>
             </div>
         </section>
 
-        <section v-if="currentTab === 'bank'">
-            <h2>我的單字庫</h2>
-            <div v-if="wordBank.length === 0" style="text-align:center; padding:40px; color:gray;">單字庫是空的，快去收藏一些單字吧！</div>
-            <div v-for="(w, index) in wordBank" :key="index" class="word-card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><strong>{{ w.word }}</strong> - {{ w.chinese }}</div>
-                <button @click="removeFromBank(index)" style="color:red; border:none; background:none; cursor:pointer;">移除</button>
-            </div>
-        </section>
-
-        <section v-if="currentTab === 'quiz'">
-            <div v-if="quizFinished" class="quiz-card">
-                <h2>測驗結束！</h2>
-                <p style="font-size: 3em; color: #28a745;">{{ score }} 分</p>
-                <button @click="startQuiz" style="width:100%; padding:10px; background:#007bff; color:white; border:none; border-radius:5px;">重新挑戰</button>
-            </div>
-            <div v-else-if="quizWords.length > 0" class="quiz-card">
-                <p>題目 {{ currentQuizIndex + 1 }} / {{ quizWords.length }}</p>
-                <div class="quiz-word">{{ quizWords[currentQuizIndex].word }}</div>
-                <div class="options">
-                    <button v-for="opt in currentOptions" @click="checkAnswer(opt)">{{ opt }}</button>
-                </div>
-            </div>
-            <div v-else style="text-align:center; padding:40px;">單字庫至少需要 3 個單字才能測驗！</div>
-        </section>
-    </div>
+        </div>
     <script src="script.js"></script>
 </body>
 </html>
