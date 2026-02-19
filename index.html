@@ -5,32 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 智能英文學習</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
-    <style>
-        /* 這裡放 style.css 的內容，整合在一起最穩 */
-        body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 15px; background: #f0f2f5; }
-        [v-cloak] { display: none; }
-        .tabs { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 10px; position: sticky; top: 10px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .tabs button { padding: 10px; border: none; background: none; font-size: 16px; cursor: pointer; border-radius: 5px; }
-        .tabs button.active { background: #007bff; color: white; font-weight: bold; }
-        
-        .word-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .word-header { display: flex; justify-content: space-between; align-items: center; }
-        .word-header h3 { margin: 0; color: #007bff; font-size: 1.5em; }
-        .actions button { margin-left: 5px; padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-        
-        .ex-item { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .ex-text { flex: 1; margin-right: 10px; }
-        .ex-en { font-weight: 500; color: #333; display: block; }
-        .ex-zh { font-size: 0.85em; color: #666; display: block; }
-        .btn-play-mini { border: 1px solid #ccc; border-radius: 50%; width: 32px; height: 32px; background: white; cursor: pointer; }
-        
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .quiz-card { background: white; padding: 40px 20px; text-align: center; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .options button { display: block; width: 100%; margin: 10px 0; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; font-size: 1.1em; cursor: pointer; }
-        .options button:hover { background: #f0f7ff; border-color: #007bff; }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <style>[v-cloak] { display: none; }</style>
 </head>
 <body>
     <div id="app" v-cloak>
@@ -41,27 +17,25 @@
         </nav>
 
         <section v-if="currentTab === 'daily'">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin:0;">網路獲取單字</h2>
-                <button @click="fetchAllData" :disabled="loading" style="padding:10px 15px; background:#28a745; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">
+            <div class="header-row">
+                <h2>網路獲取單字</h2>
+                <button @click="fetchAllData" :disabled="loading" class="btn-refresh">
                     {{ loading ? '抓取中...' : '🔄 刷新 10 個單字' }}
                 </button>
             </div>
-
-            <div v-if="loading" style="text-align:center; padding: 50px;">
+            <div v-if="loading" class="loading-box">
                 <div class="loader"></div>
-                <p>正在同步 Google 翻譯與字典 API...</p>
+                <p>正在同步字典與翻譯...</p>
             </div>
-
             <div v-else v-for="w in dailyWords" :key="w.word" class="word-card">
                 <div class="word-header">
-                    <h3>{{ w.word }} <small style="font-weight:normal; color:#666;">{{ w.phonetic }}</small></h3>
+                    <h3>{{ w.word }} <small>{{ w.phonetic }}</small></h3>
                     <div class="actions">
                         <button @click="speak(w.word)">🔊 撥放</button>
-                        <button @click="addToBank(w)" :disabled="isInBank(w.word)">{{ isInBank(w.word) ? '已存' : '📥 存入' }}</button>
+                        <button @click="addToBank(w)" :disabled="isInBank(wordBank, w.word)">{{ isInBank(wordBank, w.word) ? '已存' : '📥 存入' }}</button>
                     </div>
                 </div>
-                <p><strong>中文翻譯：</strong> <span style="color:#d9534f; font-weight:bold;">{{ w.chinese }}</span></p>
+                <p><strong>中文翻譯：</strong> <span class="zh-main">{{ w.chinese }}</span></p>
                 <div class="examples">
                     <div v-for="(ex, i) in w.examples" :key="i" class="ex-item">
                         <div class="ex-text">
@@ -74,115 +48,10 @@
             </div>
         </section>
 
-        <section v-if="currentTab === 'bank'">
-            <h2>我的單字庫</h2>
-            <div v-if="wordBank.length === 0" style="text-align:center; padding:50px; color:#999;">庫內空空如也...</div>
-            <div v-for="(w, index) in wordBank" :key="index" class="word-card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><strong>{{ w.word }}</strong> <small>({{ w.chinese }})</small></div>
-                <button @click="removeFromBank(index)" style="color:red; border:none; background:none; cursor:pointer;">移除</button>
-            </div>
-        </section>
-
-        <section v-if="currentTab === 'quiz'">
-            <div v-if="quizFinished" class="quiz-card">
-                <h2>測驗結束！</h2>
-                <div style="font-size:3em; color:#28a745;">{{ score }}</div>
-                <p>總分 100 分</p>
-                <button @click="startQuiz" style="padding:10px 20px; background:#007bff; color:white; border:none; border-radius:5px;">重新挑戰</button>
-            </div>
-            <div v-else-if="quizWords.length > 0" class="quiz-card">
-                <p>題目 {{ currentQuizIndex + 1 }} / {{ quizWords.length }}</p>
-                <div style="font-size:2.5em; font-weight:bold; margin:20px 0;">{{ quizWords[currentQuizIndex].word }}</div>
-                <div class="options">
-                    <button v-for="opt in currentOptions" @click="checkAnswer(opt)">{{ opt }}</button>
-                </div>
-            </div>
-            <div v-else style="text-align:center; padding:50px;">單字庫至少要 3 個單字才能開始！</div>
-        </section>
+        <section v-if="currentTab === 'bank'">...</section>
+        <section v-if="currentTab === 'quiz'">...</section>
     </div>
 
-    <script>
-        const { createApp } = Vue;
-
-        const WORD_SEEDS = ["negotiate", "strategy", "achievement", "available", "capacity", "efficient", "potential", "significant", "immediate", "flexible", "evaluate", "implement", "guarantee", "consequence", "frequent", "innovative", "advantage", "perspective", "relevant", "challenge"];
-
-        createApp({
-            data() {
-                return {
-                    currentTab: 'daily',
-                    dailyWords: [],
-                    wordBank: JSON.parse(localStorage.getItem('myWords') || '[]'),
-                    loading: false,
-                    quizWords: [],
-                    currentQuizIndex: 0,
-                    currentOptions: [],
-                    score: 0,
-                    quizFinished: false
-                }
-            },
-            mounted() { this.fetchAllData(); },
-            methods: {
-                async translate(text) {
-                    try {
-                        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
-                        const data = await res.json();
-                        return data[0][0][0];
-                    } catch (e) { return "翻譯載入中"; }
-                },
-                async fetchAllData() {
-                    this.loading = true;
-                    this.dailyWords = [];
-                    const shuffled = [...WORD_SEEDS].sort(() => 0.5 - Math.random()).slice(0, 10);
-                    for (const word of shuffled) {
-                        try {
-                            const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                            const dictData = await dictRes.json();
-                            if (dictData && dictData[0]) {
-                                const entry = dictData[0];
-                                let rawExs = [];
-                                entry.meanings.forEach(m => m.definitions.forEach(d => {
-                                    if (d.example) rawExs.push(d.example);
-                                    else if (d.definition && rawExs.length < 3) rawExs.push(d.definition);
-                                }));
-                                rawExs = rawExs.slice(0, 3);
-                                const [zhWord, ...zhExs] = await Promise.all([this.translate(word), ...rawExs.map(ex => this.translate(ex))]);
-                                this.dailyWords.push({ word, phonetic: entry.phonetic || '', chinese: zhWord, examples: rawExs, chinese_ex: zhExs });
-                            }
-                        } catch (e) { console.error(e); }
-                    }
-                    this.loading = false;
-                },
-                speak(text) {
-                    window.speechSynthesis.cancel();
-                    const msg = new SpeechSynthesisUtterance(text);
-                    msg.lang = 'en-US';
-                    window.speechSynthesis.speak(msg);
-                },
-                addToBank(word) {
-                    if (!this.isInBank(word.word)) {
-                        this.wordBank.push(JSON.parse(JSON.stringify(word)));
-                        localStorage.setItem('myWords', JSON.stringify(this.wordBank));
-                    }
-                },
-                isInBank(wordName) { return this.wordBank.some(w => w.word === wordName); },
-                removeFromBank(index) {
-                    this.wordBank.splice(index, 1);
-                    localStorage.setItem('myWords', JSON.stringify(this.wordBank));
-                },
-                startQuiz() {
-                    if (this.wordBank.length < 3) { alert("請先存入至少3個單字！"); return; }
-                    this.currentTab = 'quiz';
-                    this.quizWords = [...this.wordBank].sort(() => 0.5 - Math.random()).slice(0, 50);
-                    this.currentQuizIndex = 0; this.score = 0; this.quizFinished = false;
-                    this.generateOptions();
-                },
-                generateOptions() {
-                    const correct = this.quizWords[this.currentQuizIndex].chinese;
-                    let others = this.wordBank.map(w => w.chinese).filter(c => c !== correct);
-                    if (others.length < 2) others = ["錯誤1", "錯誤2"];
-                    others = [...new Set(others)].sort(() => 0.5 - Math.random()).slice(0, 2);
-                    this.currentOptions = [correct, ...others].sort(() => 0.5 - Math.random());
-                },
-                checkAnswer(ans) {
-                    if (ans === this.quizWords[this.currentQuizIndex].chinese) this.score += 2;
-                    if (this.currentQuizIndex < this.quizWords.length
+    <script src="script.js"></script>
+</body>
+</html>
