@@ -1,0 +1,14 @@
+body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
+.tabs { display: flex; justify-content: space-around; margin-bottom: 20px; }
+.tabs button { padding: 10px; cursor: pointer; border: none; background: none; font-size: 16px; }
+.tabs button.active { border-bottom: 3px solid #007bff; color: #007bff; font-weight: bold; }
+
+.word-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.word-header { display: flex; justify-content: space-between; align-items: center; }
+.examples { color: #555; font-size: 0.9em; }
+
+.quiz-card { background: #fff; padding: 30px; text-align: center; border-radius: 10px; }
+.quiz-word { font-size: 2em; font-weight: bold; color: #333; }
+.options button { display: block; width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+.options button:hover { background: #e9ecef; }
+.score { font-size: 2em; color: #28a745; text-align: center; }
