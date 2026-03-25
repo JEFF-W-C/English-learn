@@ -3,55 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能英文學習</title>
+    <title>AI 翻轉單字卡</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <style>[v-cloak] { display: none; }</style>
+    <style>
+        :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        [v-cloak] { display: none; }
+        
+        /* 導覽列 */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .tabs button { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; color: #666; transition: 0.3s; }
+        .tabs button.active { background: var(--primary); color: white; }
+
+        /* 一般區塊樣式 */
+        .section-box { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group input { flex: 1; padding: 12px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 16px; outline: none; }
+        .input-group input:focus { border-color: var(--primary); }
+        .btn-add { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .word-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .btn-del { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+
+        /* --- 3D 翻轉單字卡核心 CSS --- */
+        .flashcard-scene { perspective: 1000px; width: 100%; height: 400px; margin: 20px 0; }
+        .flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
+        .flashcard.is-flipped { transform: rotateY(180deg); }
+        
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #f0f0f0; }
+        .card-back { transform: rotateY(180deg); background: #fdfdfd; border-color: var(--primary); }
+
+        /* 卡片內容排版 */
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 15px; }
+        .word-title { font-size: 2.5em; font-weight: 800; color: var(--primary); margin: 0; line-height: 1; }
+        .phonetic { color: #888; font-size: 1.2rem; margin-top: 5px; display: block; }
+        
+        .ex-container { flex: 1; overflow-y: auto; }
+        .ex-row { display: flex; align-items: flex-start; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 10px; gap: 10px; }
+        .ex-text { flex: 1; font-size: 1.1rem; color: #444; }
+        
+        .btn-audio { background: #f0f2f5; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
+        .btn-audio:hover { background: #e4e6e9; transform: scale(1.1); }
+        .btn-audio.main { width: 50px; height: 50px; font-size: 24px; background: #e1effe; color: var(--primary); }
+
+        /* 測驗控制列 */
+        .quiz-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+        .quiz-controls button { padding: 12px 25px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .quiz-controls button:disabled { background: #ccc; cursor: not-allowed; }
+        
+        /* 載入動畫 */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .flip-hint { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 15px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    </style>
 </head>
 <body>
     <div id="app" v-cloak>
         <nav class="tabs">
-            <button @click="currentTab = 'daily'" :class="{ active: currentTab === 'daily' }">每日推薦</button>
-            <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">單字庫 ({{ wordBank.length }})</button>
-            <button @click="startQuiz" :class="{ active: currentTab === 'quiz' }">練習測驗</button>
+            <button @click="currentTab = 'add'" :class="{ active: currentTab === 'add' }">➕ 擴充單字</button>
+            <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">📚 單字庫 ({{ wordBank.length }})</button>
+            <button @click="startQuiz" :class="{ active: currentTab === 'quiz' }">🎯 翻卡測驗</button>
         </nav>
 
-        <section v-if="currentTab === 'daily'">
-            <div class="header-row">
-                <h2>網路獲取單字</h2>
-                <button @click="fetchAllData" :disabled="loading" class="btn-refresh">
-                    {{ loading ? '抓取中...' : '🔄 刷新 10 個單字' }}
+        <div v-show="currentTab === 'add'" class="section-box">
+            <h2>輸入想學的英文單字</h2>
+            <div class="input-group">
+                <input type="text" v-model="searchQuery" @keyup.enter="searchAndAddWord" placeholder="例如: inevitable, fascinate...">
+                <button @click="searchAndAddWord" :disabled="loading || !searchQuery.trim()" class="btn-add">
+                    <span v-if="loading" class="loader"></span>
+                    <span v-else>一鍵獲取</span>
                 </button>
             </div>
-            <div v-if="loading" class="loading-box">
-                <div class="loader"></div>
-                <p>正在同步字典與翻譯...</p>
-            </div>
-            <div v-else v-for="w in dailyWords" :key="w.word" class="word-card">
-                <div class="word-header">
-                    <h3>{{ w.word }} <small>{{ w.phonetic }}</small></h3>
-                    <div class="actions">
-                        <button @click="speak(w.word)">🔊 撥放</button>
-                        <button @click="addToBank(w)" :disabled="isInBank(wordBank, w.word)">{{ isInBank(wordBank, w.word) ? '已存' : '📥 存入' }}</button>
-                    </div>
-                </div>
-                <p><strong>中文翻譯：</strong> <span class="zh-main">{{ w.chinese }}</span></p>
-                <div class="examples">
-                    <div v-for="(ex, i) in w.examples" :key="i" class="ex-item">
-                        <div class="ex-text">
-                            <span class="ex-en">{{ ex }}</span>
-                            <span class="ex-zh">{{ w.chinese_ex[i] }}</span>
-                        </div>
-                        <button class="btn-play-mini" @click="speak(ex)">▶️</button>
-                    </div>
-                </div>
-            </div>
-        </section>
+            <p v-if="loading" style="color: #666; font-size: 0.9em;">AI 正在為您搜尋例句與翻譯，請稍候...</p>
+            <p style="color: #888; font-size: 0.9em;">系統將自動為您抓取音標、2個例句及繁體中文翻譯，並直接存入單字庫中。</p>
+        </div>
 
-        <section v-if="currentTab === 'bank'">...</section>
-        <section v-if="currentTab === 'quiz'">...</section>
+        <div v-show="currentTab === 'bank'" class="section-box">
+            <h2>我的單字庫</h2>
+            <div v-if="wordBank.length === 0" style="text-align:center; color:#999; padding: 20px;">
+                目前沒有單字，快去「擴充單字」新增吧！
+            </div>
+            <div v-for="(w, index) in wordBank" :key="index" class="word-list-item">
+                <div style="font-size: 1.1em;">
+                    <strong>{{ w.word }}</strong> <span style="color:#666; font-size:0.9em;">{{ w.phonetic }}</span>
+                    <div style="color: #d9534f; font-size: 0.9em; margin-top: 4px;">{{ w.chinese }}</div>
+                </div>
+                <button @click="removeFromBank(index)" class="btn-del">刪除</button>
+            </div>
+        </div>
+
+        <div v-show="currentTab === 'quiz'">
+            <div v-if="quizWords.length > 0">
+                <div style="text-align: center; font-weight: bold; color: #666;">
+                    測驗進度: {{ currentQuizIndex + 1 }} / {{ quizWords.length }}
+                </div>
+                
+                <div class="flashcard-scene">
+                    <div class="flashcard" :class="{ 'is-flipped': isFlipped }" @click="flipCard">
+                        
+                        <div class="card-face card-front">
+                            <div class="card-header">
+                                <div>
+                                    <h3 class="word-title">{{ currentCard.word }}</h3>
+                                    <span class="phonetic">{{ currentCard.phonetic }}</span>
+                                </div>
+                                <button class="btn-audio main" @click.stop="speak(currentCard.word)">🔊</button>
+                            </div>
+                            <div class="ex-container">
+                                <div v-for="(ex, i) in currentCard.examples" :key="i" class="ex-row">
+                                    <div class="ex-text">{{ ex }}</div>
+                                    <button class="btn-audio" @click.stop="speak(ex)">🔈</button>
+                                </div>
+                                <div v-if="currentCard.examples.length === 0" style="color:#999; text-align:center; margin-top:20px;">無英文例句</div>
+                            </div>
+                            <div class="flip-hint">👆 點擊卡片空白處翻面查看解答</div>
+                        </div>
+
+                        <div class="card-face card-back">
+                            <div class="card-header" style="border-bottom-color: #d9534f;">
+                                <div>
+                                    <h3 class="word-title" style="color: #d9534f;">{{ currentCard.chinese }}</h3>
+                                    <span class="phonetic">中文釋義</span>
+                                </div>
+                            </div>
+                            <div class="ex-container">
+                                <div v-for="(zhEx, i) in currentCard.chinese_ex" :key="i" class="ex-row" style="background: #fff5f5;">
+                                    <div class="ex-text" style="color:#c0392b;">{{ zhEx }}</div>
+                                </div>
+                                <div v-if="currentCard.chinese_ex.length === 0" style="color:#999; text-align:center; margin-top:20px;">無中文例句</div>
+                            </div>
+                            <div class="flip-hint">👆 點擊卡片空白處翻回正面</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="quiz-controls">
+                    <button @click="prevCard" :disabled="currentQuizIndex === 0">⬅️ 上一字</button>
+                    <button @click="nextCard" v-if="currentQuizIndex < quizWords.length - 1">下一字 ➡️</button>
+                    <button @click="finishQuiz" v-else style="background: #28a745;">🎉 結束測驗</button>
+                </div>
+            </div>
+            
+            <div v-else class="section-box" style="text-align:center; padding: 40px;">
+                <h3 style="color:#d9534f;">單字數量不足</h3>
+                <p>單字庫至少需要 1 個單字才能開始測驗！</p>
+                <button @click="currentTab = 'add'" class="btn-add">前往擴充單字</button>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    currentTab: 'add',
+                    searchQuery: '',
+                    loading: false,
+                    wordBank: JSON.parse(localStorage.getItem('myFlashcards') || '[]'),
+                    
+                    // 測驗相關
+                    quizWords: [],
+                    currentQuizIndex: 0,
+                    isFlipped: false
+                }
+            },
+            computed: {
+                currentCard() {
+                    return this.quizWords[this.currentQuizIndex] || {};
+                }
+            },
+            methods: {
+                // Google 翻譯 API 呼叫
+                async translate(text) {
+                    try {
+                        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
+                        const data = await res.json();
+                        return data[0][0][0];
+                    } catch (e) {
+                        return "翻譯失敗";
+                    }
+                },
+
+                // 一鍵獲取並存入
+                async searchAndAddWord() {
+                    const wordToSearch = this.searchQuery.trim().toLowerCase();
+                    if (!wordToSearch) return;
+                    
+                    // 檢查是否已存在
+                    if (this.wordBank.some(w => w.word.toLowerCase() === wordToSearch)) {
+                        alert("這個單字已經在你的單字庫囉！");
+                        this.searchQuery = '';
+                        return;
+                    }
+
+                    this.loading = true;
+                    try {
+                        // 呼叫 Dictionary API
+                        const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${wordToSearch}`);
+                        if (!dictRes.ok) throw new Error("找不到單字");
+                        const dictData = await dictRes.json();
+                        const entry = dictData[0];
+
+                        // 提取最多 2 個例句
+                        let rawExs = [];
+                        entry.meanings.forEach(m => {
+                            m.definitions.forEach(d => {
+                                if (d.example) rawExs.push(d.example);
+                            });
+                        });
+                        // 如果沒有例句，改抓定義代替
+                        if (rawExs.length < 2) {
+                            entry.meanings.forEach(m => {
+                                m.definitions.forEach(d => {
+                                    if (!d.example && d.definition && rawExs.length < 2) rawExs.push(d.definition);
+                                });
+                            });
+                        }
+                        rawExs = rawExs.slice(0, 2);
+
+                        // 平行翻譯單字與例句
+                        const [zhWord, ...zhExs] = await Promise.all([
+                            this.translate(entry.word),
+                            ...rawExs.map(ex => this.translate(ex))
+                        ]);
+
+                        // 組合單字資料
+                        const newWord = {
+                            word: entry.word,
+                            phonetic: entry.phonetic || (entry.phonetics && entry.phonetics[0] ? entry.phonetics[0].text : ''),
+                            chinese: zhWord,
+                            examples: rawExs,
+                            chinese_ex: zhExs
+                        };
+
+                        // 存入最前面並更新 LocalStorage
+                        this.wordBank.unshift(newWord);
+                        localStorage.setItem('myFlashcards', JSON.stringify(this.wordBank));
+                        this.searchQuery = '';
+                        alert(`✨ 成功收錄單字：${entry.word}`);
+
+                    } catch (e) {
+                        alert("❌ 查無此字，請確認拼字是否正確！");
+                    }
+                    this.loading = false;
+                },
+
+                // 移除單字
+                removeFromBank(index) {
+                    if(confirm("確定要刪除這個單字嗎？")) {
+                        this.wordBank.splice(index, 1);
+                        localStorage.setItem('myFlashcards', JSON.stringify(this.wordBank));
+                    }
+                },
+
+                // 語音播放
+                speak(text) {
+                    window.speechSynthesis.cancel();
+                    const msg = new SpeechSynthesisUtterance(text);
+                    msg.lang = 'en-US';
+                    msg.rate = 0.9; // 稍微放慢一點，適合學習
+                    window.speechSynthesis.speak(msg);
+                },
+
+                // 測驗系統邏輯
+                startQuiz() {
+                    if (this.wordBank.length === 0) {
+                        this.currentTab = 'quiz';
+                        this.quizWords = [];
+                        return;
+                    }
+                    // 隨機打亂並抽取最多 10 個單字
+                    this.quizWords = [...this.wordBank].sort(() => 0.5 - Math.random()).slice(0, 10);
+                    this.currentQuizIndex = 0;
+                    this.isFlipped = false;
+                    this.currentTab = 'quiz';
+                },
+
+                flipCard() {
+                    this.isFlipped = !this.isFlipped;
+                },
+
+                nextCard() {
+                    if (this.currentQuizIndex < this.quizWords.length - 1) {
+                        this.isFlipped = false; // 切換前先翻回正面
+                        setTimeout(() => {
+                            this.currentQuizIndex++;
+                        }, 150); // 給一點翻轉重置的視覺緩衝時間
+                    }
+                },
+
+                prevCard() {
+                    if (this.currentQuizIndex > 0) {
+                        this.isFlipped = false;
+                        setTimeout(() => {
+                            this.currentQuizIndex--;
+                        }, 150);
+                    }
+                },
+                
+                finishQuiz() {
+                    alert("🎉 恭喜你完成這次的翻卡測驗！");
+                    this.currentTab = 'bank';
+                }
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
