@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 翻轉單字卡 - 終極防彈版</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    <title>AI 翻轉單字卡 - 鈦合金防彈版</title>
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    
     <style>
         :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6; }
         
-        /* 移除 v-cloak，保證畫面絕對不會全白 */
-
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .tabs button { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; color: #666; transition: 0.3s; }
         .tabs button.active { background: var(--primary); color: white; }
@@ -65,13 +65,13 @@
         .btn-cancel { background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-add-ex { background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85em; cursor: pointer; float: right; }
         
-        #error-box { display: none; background: #ffeaa7; padding: 20px; border: 2px solid #d63031; color: #d63031; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+        #error-box { display: none; background: #ffeaa7; padding: 20px; border: 2px solid #d63031; color: #d63031; border-radius: 10px; margin-bottom: 20px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
     <div id="error-box"></div>
     
-    <div id="app">
+    <div id="app" style="display: none;">
         <nav class="tabs">
             <button @click="currentTab = 'add'" :class="{ active: currentTab === 'add' }">➕ 擴充單字</button>
             <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">📚 單字庫 ({{ wordBank.length }})</button>
@@ -188,10 +188,14 @@
     </div>
 
     <script>
-        try {
-            const { createApp } = Vue;
+        // 引擎偵測系統
+        if (typeof Vue === 'undefined') {
+            document.getElementById('error-box').style.display = 'block';
+            document.getElementById('error-box').innerHTML = `<h3>⚠️ 致命錯誤：找不到 Vue 引擎</h3><p>您的網路環境阻擋了 Vue.js 的載入，或者您不小心刪除了第 9 行的 &lt;script&gt; 標籤。<br>請檢查網路或重新複製程式碼！</p>`;
+        } else {
+            // Vue 引擎成功載入，顯示 App
+            document.getElementById('app').style.display = 'block';
 
-            // 你的超級字庫
             const RAW_MASSIVE_DB = [
                 ["office relocation", "辦公室搬遷"], ["reception desk", "接待台"], ["leading supplier", "主要供應商"], ["intended listener", "目標聽眾"], ["consultation", "諮詢"], ["upon", "在...之上,迫近,緊接著"], ["pottery", "陶器"], ["assess", "評價,評估"], ["vitality", "活力;元氣"], ["command", "命令、指揮"], ["fixtures", "固定裝置"], ["naturally", "自然地；天生地"], ["obligation", "義務，責任"], ["I cannot recommend the store enough", "我極力推薦這個店家"], ["verge", "邊緣"], ["a couple of other places", "其他地方"], ["Lost Cause", "注定會失敗的事情"], ["cause", "原因,目標,引起"], ["deal", "交易,合約"], ["disagreed", "不同意(過去式)"], ["diagnose", "診斷"], ["swiftly", "迅速地"], ["generally", "一般地"], ["enhancing", "增強、提高"], ["acceptable", "可接受的"], ["financial means", "財務手段"], ["afford", "負擔得起"], ["appropriate", "適當的"], ["disability", "無力,殘疾"], ["senior", "年長的，進階的"], ["citizen", "公民"], ["mobility", "可動性,變動性"], ["caution", "警告"], ["consumer", "消費者"], ["element", "要素、成分"], ["placement", "放置; 佈置"], ["assurance", "保證"], ["knit belt", "腰帶"], ["even so", "即使如此"], ["despite", "儘管"], ["tablet", "平板電腦"], ["plant", "植物,工廠,種植"], ["leakage", "洩漏"], ["combustion", "燃燒"], ["reaction", "反應"], ["stripping", "剝離"], ["etching", "蝕刻"], ["factor", "因素,要素"], ["stable", "穩定的"], ["dosing", "定量; 配量"], ["externally", "外部地"], ["prevent", "預防,避免"], ["scaling", "縮放,結垢"], ["corrosion", "腐蝕"], ["growth", "增長,發育"], ["consolidate", "鞏固、合併"], ["nightstand", "床頭櫃"], ["mounted", "安裝"], ["within", "在...之內"], ["reserve", "保留"], ["tense", "緊張的"], ["hesitant", "猶豫的"], ["switchover", "替換、互換"], ["honesty", "誠實"], ["unavoidable", "無法避免的"], ["intuitive", "直覺的"], ["streamlined", "有效率的"], ["implement", "執行"], ["encounter", "遇到"], ["halve", "減半"], ["tornado", "龍捲風"], ["distribution", "分發;分配"], ["effort", "努力"], ["medium", "中間,中庸"], ["enforce", "執行"], ["severance", "遣散費"], ["scientific", "科學的"], ["pesticides", "殺蟲劑"], ["upkeep", "保養"], ["harmful", "有害的"], ["contain", "包含"], ["lanyards", "掛繩"], ["swipe card", "感應卡"], ["quotation", "報價單"], ["apron", "圍裙"], ["tough", "困難的"], ["upset", "難過的"], ["costume", "服裝；戲服"], ["industry", "工業,產業"], ["stock", "庫存、股票"], ["energetic", "有活力的"], ["first aid", "急救的"], ["each other", "彼此"], ["apparently", "表面上,顯然地"], ["entrant", "參賽者"], ["constant", "持續的"], ["undergone", "經歷過"], ["spade", "鏟子"], ["restriction", "限制"], ["dieting", "節食"], ["stressful", "有壓力的"], ["enrollment", "加入/招收/登記"], ["refund", "退款"], ["emission", "排放"], ["inclusion", "包括；包含"], ["for instance", "例如"], ["in spite of", "儘管"], ["as for", "至於；關於"], ["now that", "既然,由於"], ["discipline", "學科 紀律"], ["format", "版式;形式"], ["stroll", "散步；閒逛"], ["recipients", "收件人"], ["simultaneously", "同時地"], ["exception", "例外"], ["exceptionally", "非常地"], ["incidentally", "偶然,順便"], ["artificially", "人工地"], ["sculptures", "雕像 雕塑品"], ["outskirts", "郊區"], ["catalog", "目錄"], ["malfunction", "故障"], ["resume", "履歷表、重新開始"], ["otherwise", "否則"], ["identical", "完全相同的"], ["adventure", "冒險"], ["advanced", "先進的；高等的"], ["idealistic", "理想主義的"], ["critice", "評論家"], ["critical", "批評的"], ["suitable", "適合的"], ["naive", "天真的;幼稚的"], ["blacksmith", "鐵匠"], ["textile weaving", "紡織編織"], ["accessible", "可使用的"], ["interpreter", "口譯員"], ["involved", "有關的，牽涉在內的"], ["comprised", "包含， 組成"], ["wheel chair", "輪椅"], ["impeller", "葉輪"], ["suction", "抽吸"], ["discharge", "釋放"], ["refining", "提煉"], ["spool", "線軸"], ["radiation", "輻射"], ["compared", "比較的; 對照的"], ["suspect", "懷疑"], ["panel discussions", "小組討論"], ["appeal", "呼籲,要求;吸引力"], ["indigenous", "本土的,土著的"], ["domestic", "家裏的;國內的"], ["interest", "興趣"], ["aligned", "對齊的"], ["behalf", "代表,利益"], ["vintage", "經典的；最好的"], ["dedicated", "專注的"], ["preloved", "二手"], ["sourcing", "採購"], ["bite", "咬,一口"], ["varies", "變化"], ["inclusive", "包含的"], ["collectibles", "收藏品"], ["desirable", "理想的"], ["sustainability", "永續性"], ["reputation", "名聲"], ["instantly", "立即地"], ["optimally", "最理想地"], ["explicitly", "明確地"], ["similarly", "同樣地"], ["dissatisfied", "不滿意的"], ["value", "價值"], ["rude", "無禮的"], ["recent", "最近的"], ["antique", "古代的、古董的"], ["acquisition", "獲得"], ["solicit funding", "募集資金"], ["enabled", "啟動的"], ["inner-city school", "市內學校"], ["suitcase", "行李箱"], ["visibility", "能見度"], ["summit", "頂點,最高階層"], ["newcomer", "新手;初學者"], ["scene", "場景"], ["attracting", "吸引"], ["extracting", "提取 萃取"], ["simplifying", "簡化"], ["funeral", "葬禮"], ["leisure", "休閒"], ["navigate", "導航"], ["faucet", "水龍頭"], ["water dispenser", "飲水機"], ["barriers", "障礙物"], ["spillage", "溢出；溢出量"], ["armrests", "扶手"], ["outlined", "大綱 概述"], ["reusable", "可重複使用的"], ["uncover", "揭開...的蓋子"], ["depicting", "描繪"], ["intake form", "入學表格"], ["commitment", "承諾,保證"], ["rectified", "糾正"], ["glitch", "小故障、小毛病"], ["minor", "未成年人 次要的"], ["promptly", "即時"], ["guidance", "指導"], ["revamping", "改造"], ["liability", "責任；義務"], ["dedication", "貢獻, 奉獻"], ["farewell party", "歡送會"], ["symposium", "研討會"], ["due to", "由於"], ["giant", "巨人；巨大的"], ["due", "到期的"], ["cushion", "坐墊"], ["avocado", "酪梨"], ["prawn", "明蝦,大蝦"], ["absent", "缺席的"], ["recipe", "食譜"], ["reluctant", "不情願的"], ["pitiful", "可憐的 令人同情的"], ["dismayed", "沮喪的"], ["spices", "调味料"], ["to reach an agreement", "達成協議"], ["reach an item", "伸手拿物品"], ["come to a conclusion", "得出結論"], ["hold a meeting", "舉行會議"], ["metropolitan", "大都會的"], ["pay an invoice", "支付發票"], ["components", "成份,組成"], ["throughout", "徹頭徹尾,自始至終"], ["reach", "到達,伸手，達成"], ["migrate", "遷徙"], ["inherited", "遺傳的"], ["comedians", "喜劇演員"], ["sense", "感覺"], ["quarterly", "每季的"], ["readership", "讀者"], ["complimented", "稱讚"], ["measure", "測量,措施，尺碼"], ["accidentally", "偶然地,意外地"], ["orientation", "定向，目標，新生訓練"], ["mandatory", "命令的;強制的"], ["stationery supplies", "文具用品"], ["fortified", "加強的"], ["magnified", "放大, 擴大"], ["certified", "被證明的；公認的"], ["justified", "有正當理由的"], ["formerly", "以前"], ["submit", "提交"], ["remarkably", "非常地；明顯地"], ["rigid", "堅硬的;嚴格的"], ["present", "目前的,贈送,提出"], ["humor", "幽默"], ["assortment", "各式各樣"], ["markers", "彩色筆"], ["courteous", "有禮貌的"], ["prompt", "迅速的，立即的"], ["rate", "比率,速度,價格"], ["contributing", "貢獻 促成"], ["specified", "指定的"], ["amount", "數量"], ["assignment", "任務,作業;分配"], ["wage", "工資"], ["profit", "利潤"], ["supervisory experience", "管理經驗"], ["achieved", "達成"], ["formulas", "配方；公式"], ["associate", "聯想"], ["finance", "財務"], ["after all", "畢竟"], ["as long as", "只要"], ["emphasis", "強調、重點"], ["cuisines", "美食"], ["recycling", "回收"], ["conveyor belt", "輸送帶"], ["discarded", "廢棄的"], ["landfill", "垃圾掩埋場"], ["disposal", "處理,清除"], ["discs", "光盤"], ["cardboard", "厚紙板"], ["flattened", "壓扁"], ["barrier", "障礙物;柵欄"], ["shredded", "切絲"], ["magnet", "磁鐵"], ["sort", "排序,挑選,分揀"], ["crush", "壓碎"], ["shatter", "粉碎;砸碎"], ["optical scanner", "光學掃描機"], ["raw materials", "原料"], ["fill", "裝滿"], ["diverse", "多樣的"], ["broader", "寬闊的"], ["enthusiasm", "熱情，熱忱"], ["aspects", "外觀, 方面"], ["promise", "承諾"], ["spread", "散佈"], ["enterprise", "企業,事業心"], ["frustrated", "沮喪的"], ["approach", "接近,靠近"], ["consider", "考慮"], ["set up", "設立；設置"], ["riders", "乘客"], ["as usual", "一如往常地"], ["suspense", "暫時停止"], ["following periods", "以下期間"], ["sustain", "承受,支援,維持"], ["begin a task shortly", "盡快開始任務"], ["clogged drain", "排水管阻塞"], ["standing water", "積水"], ["division", "部門"], ["literacy", "讀寫能力"], ["Bachelor's Degree", "學士學位"], ["expand", "擴大"], ["extend", "延長"], ["workforce", "勞動力"], ["retention", "保留,保持"], ["retention and advancement", "留任與晉升"], ["fill out", "填寫"], ["as mentioned", "如前所述"], ["in the meantime", "在此時，期間"], ["in order that", "為了；以便"], ["aim", "目標"], ["equipped", "裝備的；備有"], ["intent", "意圖;目的"], ["auditorium", "禮堂"], ["native", "本地的"], ["thrilled", "非常興奮的"], ["audience", "觀眾"], ["vocal", "聲音的"], ["fearless", "大膽的,勇敢的"], ["costume", "服裝"], ["exquisite", "精緻的"], ["implied", "暗指的"], ["fictional", "虛構的"], ["delighted", "高興的"], ["ordinary", "普通的,平凡的"], ["mill", "製造廠,工廠"], ["roasting", "焙燒"], ["excellence", "卓越"], ["finest", "好的,出色的"], ["career", "事業"], ["culminating", "到絕頂的，最終的"], ["founder", "創辦人"], ["exhibition", "展覽,表現"], ["trend", "趨勢"], ["sidewalk", "人行道"], ["laundry", "洗衣店"], ["break even", "收支平衡的"], ["refurbishment", "整修、翻新"], ["roster", "名冊"], ["vacancy", "空缺"], ["suffering", "痛苦,苦難"], ["illness", "疾病"], ["engage", "與...互動"], ["nationwide", "全國性的"], ["receipt", "收據"], ["paperless", "無紙化"], ["statement", "聲明,陳述"], ["company outing", "公司旅遊"], ["noise", "噪音"], ["architect", "建築師"], ["distinct", "明顯的,清楚的"], ["meanwhile", "同時,在此期間"], ["submission", "屈從，歸順，投降"], ["poems", "詩歌"], ["urgency", "緊急"], ["investigate", "調查,研究"], ["demonstrate", "示範,證明"], ["inadequate", "不適當的"], ["record", "記錄"], ["ferry", "渡輪"], ["perspective", "觀點"], ["reassurance", "安心,放心"], ["conduct", "進行"], ["therapy", "治療"], ["precise", "精確的"], ["negotiate", "談判,協商"], ["evaluate", "評估"], ["finalize", "最終的，定案"], ["outstanding", "傑出的,未完成的"], ["applicant", "申請人"], ["proficiency", "專業能力"], ["reimburse", "償還,補償"], ["recipient", "收件人"], ["defective", "有瑕疵的"], ["duration", "持續時間"], ["reception", "招待會"], ["joint", "接合;關節"], ["ambiance", "氣氛"], ["famed", "著名的；聞名的"], ["proven", "被證明的"], ["promising", "有前途的"], ["authentic", "真實的,可靠的"], ["contradict", "反駁；牴觸、矛盾"], ["inquire", "詢問"], ["accomplishment", "成就"], ["eligible", "有資格的"], ["terminate", "終止"], ["expired", "過期的"], ["coordinate", "協調"], ["administrator", "管理人,行政官"], ["priorities", "優先順序"], ["renew", "更新 恢復 續訂"], ["innovative", "創新的"], ["brochure", "小冊子"], ["merger", "合併（公司）"], ["response", "回應"], ["cooperate", "協力、合作"], ["annually", "每年地"], ["valid", "有效的"], ["infer", "推斷，推定"], ["proceeds", "收益、收入"], ["dependency", "依賴、仰賴"], ["movement", "運動,動作,運轉"], ["exhibit", "展示"], ["sensitive", "敏感的"], ["overlaps", "重疊"], ["proper", "適當的"], ["warmup", "暖身"], ["alternative", "兩者挑一的"], ["dramatic", "戲劇性的"], ["wise", "有智慧的"], ["composer", "作曲家"], ["illustration", "插圖"], ["novice", "新手,初學者"], ["neither", "兩者都不"], ["rapidly", "迅速地"], ["limit", "限制,減少"], ["expenditure", "支出, 花費"], ["pooled", "彙總"], ["divided", "平均分攤"], ["entire", "全部的"], ["waitstaff", "服務人員"], ["onto", "在...之上"], ["brokerage firm", "仲介公司"], ["conserve", "保存"], ["above", "在...上面"], ["contractor", "承包商"], ["instruction", "指示"], ["whenever", "每當"], ["above all", "最重要的是"], ["as well as", "以及"], ["in order to", "為了"], ["avenues", "途徑,方法,大街"], ["boundaries", "界線,範圍"], ["framework", "架構"], ["portable", "可攜帶的"], ["outcome", "結果"], ["prepaid", "預付的"], ["aboard", "登上"], ["prior to", "在⋯之前"], ["as much as", "跟~一樣"], ["diligently", "勤奮地"], ["plus", "加(上)"], ["whose", "誰的"], ["attempting", "嘗試"], ["as soon as possible", "儘快"], ["referral", "轉診，轉介"], ["attraction", "景點；吸引"], ["along with", "與...一起"], ["affordable", "負擔得起的"], ["tripled", "三倍"], ["steady", "穩定的"], ["thoughtful", "體貼周到的"], ["entertainment", "娛樂活動"], ["sign-up sheet", "報名表"], ["nuts", "堅果"], ["substance", "物質"], ["redirect", "改寄；改變方向"], ["high marks", "高分，高評價"], ["monthly issue", "期刊"], ["avid", "熱情的"], ["principal", "校長,主要的"], ["predecessor", "前任、前輩"], ["outperformed", "表現優於"], ["influence", "影響"], ["dried up", "乾涸"], ["tried", "嘗試"], ["tired", "疲倦的"], ["remain", "逗留;剩餘"], ["amount remaining", "剩餘金額"], ["forgetful", "健忘的"], ["tangible", "有形的、有實體的"], ["jealous", "嫉妒的"], ["narrow", "狹窄的"], ["venture", "冒險;企業"], ["situation", "情況；處境"], ["hikers", "遠足者"], ["noteworthy", "值得注意的"], ["restore", "恢復"], ["housewarming", "喬遷派對"], ["countertop", "流理台"], ["custom", "定制,自定義，海關"], ["egg beater", "打蛋機"], ["tea kettle", "茶壺"], ["toaster", "烤麵包機"], ["cheese grater", "乳酪研磨器"], ["dealt with", "處理"], ["airfare", "飛機票價"], ["pricing", "定價"], ["compensation", "補償,賠償金"], ["redeemed", "贖回,兌換"], ["generating", "產生"], ["vitally", "十分;極其"], ["novel", "小說,新奇的"], ["immeasurable", "無法估計的，廣大的"], ["ramp up", "上升,提高,增加"], ["massive", "巨大的；大量的"], ["plank", "厚板 木板"], ["iconic", "代表性的"], ["accessories", "配件;飾品"], ["aftermath", "後遺症"], ["concert", "音樂會"], ["neighbors", "鄰居"], ["mug", "馬克杯"], ["demonstration", "示範,展示"], ["decrease", "減少；降低"], ["commuter", "通勤者"], ["scarves", "圍巾"], ["journalist", "記者"], ["negotiation", "談判"], ["brew", "釀造,泡茶"], ["perfection", "完美"], ["probationary", "實習中的"], ["involuntary", "非自願的"], ["testimonials", "推薦"], ["seal", "密封,印章"], ["prominent", "重要的，知名的"], ["stack", "整齊堆放"], ["surge", "波濤洶湧、激增"], ["ought", "應該"], ["irreversible", "不可逆轉的"], ["compatible", "相容的"], ["occupancy", "佔有,居住"], ["cluttered", "亂七八糟的"], ["appearance", "外觀,外表"], ["improper", "不適當的"], ["gadget", "小配件,小玩意"], ["disabled", "殘疾的，喪失能力的"], ["breaker", "斷路器"], ["deductible", "可扣除的"], ["misfortune", "不幸"], ["sufficient", "足夠的"], ["worthless", "無價值的"], ["forklift", "堆高機"], ["sumptuous", "奢侈的,華麗的"], ["vinyl", "黑膠唱片"], ["dividends", "股利,分紅"], ["underwent", "經歷"], ["aisle", "走道"], ["exclusively", "專門地"], ["swamp", "沼澤"], ["desert", "沙漠"], ["bats", "蝙蝠"], ["plummet", "暴跌,墜落"], ["as well", "也；同樣地"], ["podiatrist", "足科醫生"], ["conjunction", "連接詞;連結"], ["bearer", "持有人,持票人"], ["prohibition", "禁止;禁令"], ["equates", "相當於"], ["sneakers", "運動鞋"], ["properly", "適當地"], ["conditioner", "潤髮乳"], ["fair", "博覽會 公平的"], ["fairly", "相當地"], ["complicate", "複雜的"], ["address a complication", "解決複雜問題"], ["pallet", "棧板"], ["hold off", "拖延"], ["stunning", "令人震驚的"], ["vibrant", "充滿活力的"], ["processor", "處理器"], ["concluded", "總結"], ["garment", "衣服,衣裝"], ["affect", "影響"], ["flood", "洪水,水災"], ["turn in", "交還，上交"], ["respective", "分別的 各自的"], ["praise", "稱讚"], ["justification", "正當理由、辯護"], ["glowing", "熾熱的, 容光煥發的"], ["bright", "明亮的"], ["military", "軍隊,軍事的"], ["population", "人口,人口數"], ["popularity", "受歡迎 流行"], ["keychain", "鑰匙圈"], ["greeter", "招待員"], ["on the spot", "當場"], ["empower", "授權"], ["enroll", "註冊"], ["visionary", "有遠見的"], ["inspire", "激勵"], ["mindset", "心態; 傾向"], ["unleash", "釋放"], ["warning light", "警示燈"], ["transformative", "徹底改觀的"], ["landscape", "風景、景色"], ["adoption", "領養"], ["vaccination", "疫苗接種"], ["interact", "互動；交流"], ["elevate", "舉起,抬起"], ["railway", "鐵路"], ["disruption", "中斷，破壞"], ["poll", "民意調查"], ["thickness", "厚、厚度"], ["capable", "有能力的"], ["resort", "度假勝地,採取,求助"], ["casually", "偶然地,臨時地"], ["mutually", "互相地,互助"], ["outage", "電力中斷；斷電"], ["tap water", "自來水"], ["grant", "同意,准予"], ["exact", "精確的,確切的"], ["voluntary", "自願的"], ["debate", "辯論"], ["incredibly", "難以置信地"], ["provincial", "鄉下人,地方的"], ["allergy", "過敏"], ["disclosed", "揭發"], ["trap", "困住"], ["shimmer", "閃爍"], ["dial", "撥號"], ["capabilities", "潛在能力"], ["overcome", "克服/戰勝"], ["dazzle", "使眼花;使驚羨"], ["entertaining", "有趣的"], ["teammates", "隊友"], ["engaging", "有吸引力的"], ["adapt", "適應"], ["vital", "極其重要的"], ["involvement", "參與/涉入"], ["storm", "暴風雨"], ["severe", "嚴重的"], ["meter", "公尺，儀表"], ["restructuring", "改組；重整"], ["greatest", "最偉大的"], ["kits", "工具組"], ["continent", "洲；大陸"], ["experimental", "實驗性的"], ["diabetes", "糖尿病"], ["rollout", "首次公開"], ["manners", "禮貌"], ["chain", "連鎖店"], ["wrap", "包裝/用...包裹"], ["exceed", "超過；超出"], ["urged", "催促"], ["napkin", "餐巾"], ["distillery", "蒸餾所"], ["creamery", "乳品工廠"], ["talented", "有才能的"], ["positive", "積極的；正面的"], ["explosive", "爆炸性的"], ["lease", "租約"], ["landlord", "房東"], ["convince", "說服"], ["knack", "訣竅;竅門"], ["scented candle", "香氛蠟燭"], ["herbal tea", "花草茶"], ["declare", "宣布"], ["uppercase", "大寫"], ["unwillingly", "不情願地"], ["discrepancies", "差異"], ["slip", "滑落"], ["file", "檔案,提出申請"], ["expel", "驅逐,開除"], ["raspberry", "覆盆子"], ["chamomile", "洋甘菊"], ["mint", "薄荷"], ["ginger", "薑"], ["handling", "處理,管理"], ["scout", "球探,偵查"], ["sole", "單獨的，唯一的"], ["drop off", "下車,留下"], ["over-reliance", "過度依賴"], ["crammed", "塞滿的,擠滿的"], ["made up", "捏造的,虛構的"], ["unlike", "不同的;不相似的"], ["less", "較少的"], ["among", "在...之中"], ["clam", "蛤蜊"], ["incur", "招致,產生"], ["remit", "匯款"], ["endure", "忍受"], ["penalties", "處罰"], ["balance", "平衡.結餘"], ["nurturing", "培育"], ["minutes", "分鐘，記錄"], ["primary goal", "主要目標"], ["mentorship", "導師制"], ["fostering", "培養"], ["up to", "最多"], ["through to", "直到.."], ["spend", "花費"], ["utilize", "利用"], ["authorization", "授權,認可"], ["dehydration", "脫水；乾燥"], ["association", "協會"], ["vaccine", "疫苗"], ["rarely", "不常.很少"], ["negligent", "粗心的"], ["concise", "簡潔的"], ["expect", "期待"], ["immensely", "極度，非常"], ["contested", "有爭議的"], ["strive", "努力,奮鬥"], ["two-story", "兩層樓"], ["extravaganza", "華麗的表演"], ["register", "登記,注冊"], ["tuition", "講授,學費"], ["counselor", "顧問"], ["detect", "探測"], ["occur", "發生,存在"], ["conceals", "隱蔽, 隱藏"], ["tolerates", "忍受; 容忍"], ["entitle", "給...權利"], ["underqualified", "不符資格的"], ["reward", "報酬、獎賞"], ["culinary", "廚房的,烹調用的"], ["gelato", "義式冰淇淋"], ["fermentation", "發酵作用"], ["bond", "債券"], ["behavior", "行為 舉止"], ["valuable", "有價值的"], ["appreciable", "明顯的"], ["disposable", "拋棄式的"], ["clasp", "緊握"], ["chin", "下巴"], ["strap", "皮帶,捆紮"], ["batch", "一批;一群"], ["aforementioned", "上述的,前述的"], ["injury", "傷害"], ["flammable", "易燃的,可燃性的"], ["endanger", "危及；危害"], ["score", "得分"], ["moderately", "適當地,中庸地"], ["signage", "招牌"], ["attitude", "態度,姿勢"], ["grants", "補助；經費"], ["uncensored", "未經審查的"], ["rehearsal", "排練,試演"], ["gangster", "歹徒,流氓"], ["salute", "敬禮"], ["obsession", "著迷"], ["sinful", "有罪的"], ["confession", "供認, 承認"], ["urge", "催促"], ["fabulous", "極好的"], ["debit", "借方；借項"], ["artist", "藝術家"], ["divorce", "離婚"], ["disappoint", "使失望"], ["passionate", "熱情的"], ["vibe", "氛圍"], ["exposure", "暴露,曝光"], ["lifespan", "壽命"], ["bamboo", "竹子"], ["cotton", "棉花"], ["sacrifice", "犧牲"], ["conventional", "傳統的"], ["thirsty", "口渴的"], ["snack", "點心"], ["gone", "消失的"], ["vacuum", "吸塵器"], ["How come?", "怎麼會"], ["grams", "公克"], ["organ", "器官"], ["underestimate", "低估"], ["adapting", "適應"], ["inspiration", "靈感"], ["decor", "裝飾"], ["mayor", "市長"], ["regret", "後悔"], ["presence", "出席"], ["liquidation", "償還,清算"], ["depute", "委託"], ["exclusive", "獨有的,獨佔的"], ["assumption", "假設,推論"], ["immersive", "身臨其境"], ["dip", "浸泡"], ["toe", "腳趾"], ["plenty", "許多,充足的"], ["stepping down", "下台"], ["vast", "巨大的,龐大的"], ["staffing changes", "人事異動"], ["wealth", "財富"], ["semester", "學期"], ["dying", "垂死的"], ["elaborate", "精細的,詳細地說明"], ["preserve", "保存；維護"], ["windfall", "意外之財"], ["annotation", "註解"], ["confidential", "機密的"], ["compact", "緊湊的,簡潔的"], ["intern", "實習生"], ["faculty", "才能,全體教學人員"], ["cope", "應付"], ["usage", "使用,用法"], ["aside", "在...旁邊"], ["premises", "營業場所"], ["sincerely", "真誠地,誠懇地"], ["reserved", "含蓄的,保留的"], ["reopen", "重開,再開始"], ["undergo", "經歷"], ["closure", "停業,關閉"], ["appreciate", "感激"], ["mat", "墊子"], ["impairment", "損害;損傷"], ["certain", "肯定的,必然的"], ["sink", "水槽"], ["tidy", "整潔的"], ["anticipate", "預料"], ["undertake", "從事,承擔"], ["advocates", "提倡者; 擁護者"], ["urban", "都市的"], ["confirmation", "確認、證實"], ["loosely", "鬆散地"], ["agricultural", "農業的"], ["commence", "開始, 著手"], ["seems", "似乎；好像"], ["drill", "操練,練習"], ["goal", "目標"], ["left work on time", "準時下班"], ["breast", "胸部"], ["bubble tea", "珍珠奶茶"], ["taxes", "稅"], ["roots", "根源；根部"], ["conscious", "有意識的"], ["initially", "最初,開始"], ["anxious", "焦急的，憂慮的"], ["sabotage", "蓄意破壞"], ["interferes", "妨礙; 衝突"], ["dyed", "染色"], ["dreaded", "令人懼怕的"], ["curse", "詛咒、咒罵"], ["threat", "威脅"], ["divine", "神的；神聖的"], ["horizon", "地平線"], ["fortunately", "幸運地"], ["indistinguishable", "不能辨別的"], ["higher grades", "高水準的物品"], ["absorb", "吸收,使專心"], ["regional", "地區的"], ["authority", "權威"], ["ban", "禁令,禁止"], ["exercise", "練習,運用,鍛煉"], ["menace", "威脅"], ["illegally", "非法地"], ["impounded", "扣押"], ["simulation", "模擬"], ["overhead", "經常開支"], ["hall", "大廳,禮堂"], ["choir", "合唱團"], ["swap time", "交換時間"], ["extensive", "廣泛的"], ["terrain", "地帶,地形"], ["wildlife", "野生生物"], ["scenery", "風景、景色"], ["embark", "著手、從事"], ["continue", "繼續、持續"], ["Illinois", "伊利諾州"], ["carpet", "地毯"], ["surprise", "驚訝"], ["disgusted", "感到噁心的"], ["admit", "承認"], ["awful", "可怕的"], ["spacious", "寬敞的"], ["incentive", "激勵"], ["adopting", "採用；領養"], ["occasion", "場合；時機"], ["clutter", "弄亂, 零亂"], ["flat", "平的，平坦的"], ["surface", "表面"], ["persistence", "堅持; 持久"], ["reductions", "減少"], ["experiencing", "經歷；體驗"], ["hardship", "艱難"], ["twisting", "扭轉"], ["lid", "蓋子"], ["blade", "刀片,刀刃"], ["clockwise", "順時針"], ["motion", "動作"], ["blended", "混合調配"], ["adequately", "足夠地,充分地"], ["premier", "首相;總理"], ["destination", "目的地；終點"], ["agent", "代理商"], ["itineraries", "行程、旅遊計畫"], ["undetermined", "未確定的"], ["venting", "通風; 排氣"], ["forums", "論壇"], ["slack", "鬆弛的;懈怠的"], ["combat", "戰鬥"], ["invasive", "侵入性的"], ["income stream", "收入來源"], ["unisex", "男女通用的"], ["attire", "服裝，著裝"], ["leash", "狗鍊 皮帶"], ["audit", "稽核,查帳"], ["collar", "衣領"], ["bold", "大膽的"], ["piece", "碎片,部分"], ["unanimously", "無異議地;同意地"], ["dull", "無聊的"], ["praised", "稱讚"], ["express", "表達"], ["invest", "投資"], ["shame", "羞恥"], ["forecast", "預測"], ["shrink", "縮小"], ["ecstatic", "狂喜的、心花怒放的"], ["embarrassed", "難堪的，尷尬的"], ["enraged", "激怒; 使憤怒"], ["unveiled", "公開"], ["mend", "修理；修補"], ["cheat", "欺騙、作弊"], ["ignorance", "無知"], ["feast", "宴會"], ["chamber", "房間"], ["prisoner", "囚犯"], ["champagne", "香檳"], ["alibis", "藉口"], ["live up", "生活，及時行樂"], ["captain", "隊長,領班"], ["sweat", "流汗"], ["courtyard", "庭院"], ["bends", "彎曲"], ["corridor", "走廊,通道"], ["metaphor", "隱喻,暗喻"], ["Arabic", "阿拉伯語"], ["dim", "微暗的;暗淡的"], ["sewing", "裁縫,縫紉"], ["pitcher", "玻璃水壺"], ["aviation", "航空,航空學"], ["nearsighted", "近視"], ["psychiatric", "精神病學的"], ["dermatology", "皮膚醫學"], ["unwilling", "不願意的"], ["stab", "刺 戳"], ["passage", "通道"], ["fountain", "噴水池"], ["adulthood", "成年"], ["underneath", "在...底下"], ["notwithstanding", "儘管"], ["interrupt", "打斷"], ["clipboard", "文件板夾"], ["nominal", "名義上的"], ["configuration", "結構、配置"], ["determine", "決定"], ["careless", "粗心的.草率的"], ["whisper", "耳語"], ["harvest", "收穫"], ["initiate", "開始"], ["span", "一段時間"], ["congestion", "擁塞"], ["expose", "暴露"], ["speculation", "推測"], ["syllabus", "教學大綱"], ["frosting", "糖霜"], ["moisture", "濕氣、水分"], ["versatile", "多才多藝的"], ["furnishings", "傢俱；室內陳設"], ["small-section", "小部分"], ["drawbacks", "缺點, 壞處"], ["disguising", "掩飾"], ["outlay", "費用,支出"], ["on behalf of", "代表,為了..."], ["belongings", "財產,所有物"], ["furthest", "最遠的"], ["opposite", "相反的、對立的"], ["parcel", "小包；包裹"], ["theft", "偷竊"], ["erodes", "腐蝕; 侵蝕"], ["precautionary", "預先警戒的"], ["waiver", "放棄,棄權証書"], ["so far", "到目前為止"], ["taking over", "接管, 繼任"], ["hustle", "慌張"], ["supplemental", "補充的"], ["top tips", "實用技巧"], ["widely", "廣泛地"], ["adhering", "遵守，依照"], ["secretly", "秘密地"], ["limited edition", "限量版"], ["ultimate", "終極的"], ["optimal", "最佳的,最理想的"], ["uniquely", "唯一地"], ["seriously", "嚴肅地,認真地"], ["previously", "先前地,以前地"], ["essential", "必要的；不可缺的"], ["perhaps", "或許,可能"], ["concession", "讓步,特許"], ["elsewhere", "在別處"], ["caught", "捕捉"], ["landslide", "土石流"], ["escape from reality", "逃離現實"], ["sympathy", "同情心"], ["carry on", "繼續"], ["shivers", "顫抖"], ["spine", "脊椎骨"], ["aching", "痛的,疼痛的"], ["behind", "在...後面"], ["fandango", "胡鬧,一種西班牙舞"], ["thunderbolt", "雷電"], ["monstrosity", "怪異,畸形"], ["spit", "唾液,口水"], ["opposed", "反對"], ["session", "會議"], ["no wonder", "難怪"], ["unbeatable prices", "無與倫比的價格"], ["enrich", "使富足,使肥沃"], ["maple", "楓樹"], ["deteriorated", "惡化"], ["annoyed", "惱怒的"], ["merely", "僅僅,只不過"], ["hygiene", "衛生"], ["debris", "碎片,殘骸"], ["sticky", "黏的"], ["residue", "殘渣,剩餘"], ["crumbs", "麵包屑,食物碎屑"], ["appalling", "令人震驚的"], ["excursion", "遠足、短途旅行"], ["seemed", "似乎"], ["mostly", "一般地,通常"], ["made sense", "有道理"], ["ingredient", "成分,因素"], ["rare", "罕見的"], ["instrument", "樂器"], ["interactive", "互動的"], ["discussion", "討論,商議"], ["permanent", "永久的"]
             ];
@@ -204,42 +208,20 @@
                 chinese_ex: []
             }));
 
-            PERMANENT_WORDS[0].examples = [
-                "The office relocation will happen next month.", "Please pack your belongings for the office relocation.", "Our office relocation was delayed by a week.", "The company hired experts for the office relocation.", "After the office relocation, we will have a bigger space."
-            ];
-            PERMANENT_WORDS[0].chinese_ex = [
-                "辦公室搬遷將在下個月進行。", "請為辦公室搬遷打包您的私人物品。", "我們的辦公室搬遷延遲了一週。", "公司聘請了專家來進行辦公室搬遷。", "辦公室搬遷後，我們將擁有更大的空間。"
-            ];
+            // 寫入完美示範例句
+            PERMANENT_WORDS[0].examples = ["The office relocation will happen next month.", "Please pack your belongings for the office relocation.", "Our office relocation was delayed by a week.", "The company hired experts for the office relocation.", "After the office relocation, we will have a bigger space."];
+            PERMANENT_WORDS[0].chinese_ex = ["辦公室搬遷將在下個月進行。", "請為辦公室搬遷打包您的私人物品。", "我們的辦公室搬遷延遲了一週。", "公司聘請了專家來進行辦公室搬遷。", "辦公室搬遷後，我們將擁有更大的空間。"];
+            PERMANENT_WORDS[1].examples = ["Please leave your keys at the reception desk.", "The receptionist is not at the reception desk right now.", "You can find a map at the reception desk.", "Please sign in at the reception desk when you arrive.", "The reception desk is located in the main lobby."];
+            PERMANENT_WORDS[1].chinese_ex = ["請將您的鑰匙留在接待台。", "接待員現在不在接待台。", "您可以在接待台找到地圖。", "抵達時請在接待台簽到。", "接待台位於主大廳。"];
+            PERMANENT_WORDS[2].examples = ["They are the leading supplier of electronic parts.", "We partnered with a leading supplier to ensure quality.", "As a leading supplier, they offer competitive prices.", "The company aims to become the leading supplier in Asia.", "Our leading supplier just launched a new product line."];
+            PERMANENT_WORDS[2].chinese_ex = ["他們是電子零件的主要供應商。", "我們與一家主要供應商合作以確保品質。", "作為主要供應商，他們提供具競爭力的價格。", "該公司致力於成為亞洲的主要供應商。", "我們的主要供應商剛推出了一條新產品線。"];
+            PERMANENT_WORDS[3].examples = ["The intended listener for this podcast is young adults.", "Always keep your intended listener in mind when writing.", "The joke was not understood by the intended listener.", "The message failed to reach the intended listener.", "Adjust your tone to suit your intended listener."];
+            PERMANENT_WORDS[3].chinese_ex = ["這個 Podcast 的目標聽眾是年輕人。", "寫作時要隨時將目標聽眾銘記在心。", "目標聽眾並沒有聽懂這個笑話。", "這個訊息沒有傳達到目標聽眾那裡。", "調整你的語氣以適合你的目標聽眾。"];
+            PERMANENT_WORDS[4].examples = ["The doctor is available for a consultation.", "We offer a free initial consultation for new clients.", "The project was delayed pending further consultation.", "He went to the clinic for a private consultation.", "After a brief consultation, they agreed on the plan."];
+            PERMANENT_WORDS[4].chinese_ex = ["醫生現在可以提供諮詢。", "我們為新客戶提供免費的初步諮詢。", "由於需要進一步諮詢，該專案被延遲了。", "他去診所進行了私人諮詢。", "經過短暫的諮詢後，他們對計劃達成了共識。"];
 
-            PERMANENT_WORDS[1].examples = [
-                "Please leave your keys at the reception desk.", "The receptionist is not at the reception desk right now.", "You can find a map at the reception desk.", "Please sign in at the reception desk when you arrive.", "The reception desk is located in the main lobby."
-            ];
-            PERMANENT_WORDS[1].chinese_ex = [
-                "請將您的鑰匙留在接待台。", "接待員現在不在接待台。", "您可以在接待台找到地圖。", "抵達時請在接待台簽到。", "接待台位於主大廳。"
-            ];
-
-            PERMANENT_WORDS[2].examples = [
-                "They are the leading supplier of electronic parts.", "We partnered with a leading supplier to ensure quality.", "As a leading supplier, they offer competitive prices.", "The company aims to become the leading supplier in Asia.", "Our leading supplier just launched a new product line."
-            ];
-            PERMANENT_WORDS[2].chinese_ex = [
-                "他們是電子零件的主要供應商。", "我們與一家主要供應商合作以確保品質。", "作為主要供應商，他們提供具競爭力的價格。", "該公司致力於成為亞洲的主要供應商。", "我們的主要供應商剛推出了一條新產品線。"
-            ];
-
-            PERMANENT_WORDS[3].examples = [
-                "The intended listener for this podcast is young adults.", "Always keep your intended listener in mind when writing.", "The joke was not understood by the intended listener.", "The message failed to reach the intended listener.", "Adjust your tone to suit your intended listener."
-            ];
-            PERMANENT_WORDS[3].chinese_ex = [
-                "這個 Podcast 的目標聽眾是年輕人。", "寫作時要隨時將目標聽眾銘記在心。", "目標聽眾並沒有聽懂這個笑話。", "這個訊息沒有傳達到目標聽眾那裡。", "調整你的語氣以適合你的目標聽眾。"
-            ];
-
-            PERMANENT_WORDS[4].examples = [
-                "The doctor is available for a consultation.", "We offer a free initial consultation for new clients.", "The project was delayed pending further consultation.", "He went to the clinic for a private consultation.", "After a brief consultation, they agreed on the plan."
-            ];
-            PERMANENT_WORDS[4].chinese_ex = [
-                "醫生現在可以提供諮詢。", "我們為新客戶提供免費的初步諮詢。", "由於需要進一步諮詢，該專案被延遲了。", "他去診所進行了私人諮詢。", "經過短暫的諮詢後，他們對計劃達成了共識。"
-            ];
-
-            const app = createApp({
+            // 鈦合金升級：使用 Vue.createApp 直接建立，不怕 ReferenceError
+            const app = Vue.createApp({
                 data() {
                     return {
                         currentTab: 'bank',
@@ -249,7 +231,6 @@
                         quizWords: [],
                         currentQuizIndex: 0,
                         isFlipped: false,
-
                         showEditModal: false,
                         editingIndex: -1,
                         editData: { word: '', phonetic: '', chinese: '', examples: [], chinese_ex: [] }
@@ -261,10 +242,10 @@
                     }
                 },
                 mounted() {
-                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v6') || 'null');
+                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v7') || 'null');
                     if (!localData || localData.length === 0) {
                         this.wordBank = JSON.parse(JSON.stringify(PERMANENT_WORDS));
-                        localStorage.setItem('myFlashcards_v6', JSON.stringify(this.wordBank));
+                        localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
                     } else {
                         this.wordBank = localData;
                     }
@@ -277,97 +258,69 @@
                             return data[0][0][0];
                         } catch (e) { return "翻譯失敗"; }
                     },
-
                     async searchAndAddWord() {
                         const wordToSearch = this.searchQuery.trim().toLowerCase();
                         if (!wordToSearch) return;
-                        
                         if (this.wordBank.some(w => w.word.toLowerCase() === wordToSearch)) {
                             alert("這個單字已經在你的單字庫囉！");
                             this.searchQuery = '';
                             return;
                         }
-
                         this.loading = true;
                         try {
                             const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${wordToSearch}`);
                             if (!dictRes.ok) throw new Error("找不到單字");
                             const dictData = await dictRes.json();
                             const entry = dictData[0];
-
                             let rawExs = [];
-                            entry.meanings.forEach(m => {
-                                m.definitions.forEach(d => { if (d.example) rawExs.push(d.example); });
-                            });
-                            
+                            entry.meanings.forEach(m => { m.definitions.forEach(d => { if (d.example) rawExs.push(d.example); }); });
                             if (rawExs.length === 0) {
-                                entry.meanings.forEach(m => {
-                                    m.definitions.forEach(d => { if (d.definition) rawExs.push(d.definition); });
-                                });
+                                entry.meanings.forEach(m => { m.definitions.forEach(d => { if (d.definition) rawExs.push(d.definition); }); });
                             }
-
-                            const [zhWord, ...zhExs] = await Promise.all([
-                                this.translate(entry.word),
-                                ...rawExs.map(ex => this.translate(ex))
-                            ]);
-
+                            const [zhWord, ...zhExs] = await Promise.all([ this.translate(entry.word), ...rawExs.map(ex => this.translate(ex)) ]);
                             const newWord = {
-                                word: entry.word,
-                                phonetic: entry.phonetic || (entry.phonetics && entry.phonetics[0] ? entry.phonetics[0].text : ''),
-                                chinese: zhWord,
-                                examples: rawExs,
-                                chinese_ex: zhExs
+                                word: entry.word, phonetic: entry.phonetic || (entry.phonetics && entry.phonetics[0] ? entry.phonetics[0].text : ''),
+                                chinese: zhWord, examples: rawExs, chinese_ex: zhExs
                             };
-
                             this.wordBank.unshift(newWord);
-                            localStorage.setItem('myFlashcards_v6', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
                             this.searchQuery = '';
-                            
                         } catch (e) {
-                            alert("❌ 查無此字！(如果真的查不到，您可以先隨便搜一個字加進去，然後使用『編輯』功能把它改成你要的字！)");
+                            alert("❌ 查無此字！請善用『編輯』功能手動新增喔！");
                         }
                         this.loading = false;
                     },
-
                     removeFromBank(index) {
                         if(confirm("確定要刪除這個單字嗎？")) {
                             this.wordBank.splice(index, 1);
-                            localStorage.setItem('myFlashcards_v6', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
                         }
                     },
-
                     openEditModal(index) {
                         this.editingIndex = index;
                         this.editData = JSON.parse(JSON.stringify(this.wordBank[index]));
                         this.showEditModal = true;
                     },
-
                     closeEditModal() {
                         this.showEditModal = false;
                         this.editingIndex = -1;
                     },
-
                     saveEdit() {
-                        if (!this.editData.word.trim()) {
-                            alert("英文單字不能為空白！"); return;
-                        }
+                        if (!this.editData.word.trim()) { alert("英文單字不能為空白！"); return; }
                         this.wordBank[this.editingIndex] = JSON.parse(JSON.stringify(this.editData));
-                        localStorage.setItem('myFlashcards_v6', JSON.stringify(this.wordBank));
+                        localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
                         this.closeEditModal();
                     },
-
                     addExample() {
                         if (!this.editData.examples) this.editData.examples = [];
                         if (!this.editData.chinese_ex) this.editData.chinese_ex = [];
                         this.editData.examples.push('');
                         this.editData.chinese_ex.push('');
                     },
-
                     removeExample(index) {
                         this.editData.examples.splice(index, 1);
                         this.editData.chinese_ex.splice(index, 1);
                     },
-
                     speak(text) {
                         window.speechSynthesis.cancel();
                         const msg = new SpeechSynthesisUtterance(text);
@@ -375,53 +328,40 @@
                         msg.rate = 0.9; 
                         window.speechSynthesis.speak(msg);
                     },
-
                     startQuiz() {
                         if (this.wordBank.length === 0) {
                             this.currentTab = 'quiz';
                             this.quizWords = [];
                             return;
                         }
-                        
                         let selectedWords = [...this.wordBank].sort(() => 0.5 - Math.random()).slice(0, 10);
-                        
                         this.quizWords = JSON.parse(JSON.stringify(selectedWords)).map(card => {
                             let pairs = [];
                             if (card.examples && card.chinese_ex) {
-                                for(let i=0; i<card.examples.length; i++) {
-                                    pairs.push({ en: card.examples[i], zh: card.chinese_ex[i] });
-                                }
+                                for(let i=0; i<card.examples.length; i++) { pairs.push({ en: card.examples[i], zh: card.chinese_ex[i] }); }
                             }
-                            if (pairs.length > 2) {
-                                pairs = pairs.sort(() => 0.5 - Math.random()).slice(0, 2);
-                            }
-                            
+                            if (pairs.length > 2) { pairs = pairs.sort(() => 0.5 - Math.random()).slice(0, 2); }
                             card.examples = pairs.map(p => p.en);
                             card.chinese_ex = pairs.map(p => p.zh);
                             return card;
                         });
-
                         this.currentQuizIndex = 0;
                         this.isFlipped = false;
                         this.currentTab = 'quiz';
                     },
-
                     flipCard() { this.isFlipped = !this.isFlipped; },
-                    
                     nextCard() {
                         if (this.currentQuizIndex < this.quizWords.length - 1) {
                             this.isFlipped = false;
                             setTimeout(() => { this.currentQuizIndex++; }, 150);
                         }
                     },
-
                     prevCard() {
                         if (this.currentQuizIndex > 0) {
                             this.isFlipped = false;
                             setTimeout(() => { this.currentQuizIndex--; }, 150);
                         }
                     },
-                    
                     finishQuiz() {
                         alert("🎉 恭喜你完成這次的翻卡測驗！");
                         this.currentTab = 'bank';
@@ -429,19 +369,7 @@
                 }
             });
 
-            // 如果 Vue 自己發生錯誤，直接顯示在畫面上！
-            app.config.errorHandler = function (err, vm, info) {
-                document.getElementById('error-box').style.display = 'block';
-                document.getElementById('error-box').innerHTML = `<h3>Vue.js 錯誤報告：</h3><p>${err.message}</p><p>請截圖這個黃色框框告訴我！</p>`;
-                console.error(err, info);
-            };
-
             app.mount('#app');
-
-        } catch (error) {
-            // 如果是最底層的 Javascript 崩潰
-            document.getElementById('error-box').style.display = 'block';
-            document.getElementById('error-box').innerHTML = `<h3>系統致命錯誤：</h3><p>${error.message}</p><p>請截圖這個黃色框框告訴我！</p>`;
         }
     </script>
 </body>
