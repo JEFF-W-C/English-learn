@@ -3,56 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 翻轉單字卡 - 鈦合金防彈版</title>
-    
+    <title>AI 翻轉單字卡 - 究極字庫版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    
     <style>
         :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-        
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .tabs button { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; color: #666; transition: 0.3s; }
         .tabs button.active { background: var(--primary); color: white; }
-
         .section-box { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group input { flex: 1; padding: 12px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
         .input-group input:focus { border-color: var(--primary); }
         .btn-add { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
         .btn-add:disabled { background: #ccc; cursor: not-allowed; }
-        
         .word-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
         .btn-action-group { display: flex; gap: 5px; flex-shrink: 0; }
         .btn-del { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
         .btn-edit { background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-
         .flashcard-scene { perspective: 1000px; width: 100%; height: 400px; margin: 20px 0; }
         .flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-        
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #f0f0f0; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #f0f0f0; overflow-y: auto; }
         .card-back { transform: rotateY(180deg); background: #fdfdfd; border-color: var(--primary); }
-
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 15px; }
-        .word-title { font-size: 2.5em; font-weight: 800; color: var(--primary); margin: 0; line-height: 1; }
-        .phonetic { color: #888; font-size: 1.2rem; margin-top: 5px; display: block; }
-        
-        .ex-container { flex: 1; overflow-y: auto; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 15px; flex-shrink: 0; }
+        .word-title { font-size: 2.2em; font-weight: 800; color: var(--primary); margin: 0; line-height: 1.2; word-break: break-word;}
+        .phonetic { color: #888; font-size: 1.1rem; margin-top: 5px; display: block; }
+        .ex-container { flex: 1; }
         .ex-row { display: flex; align-items: flex-start; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 10px; gap: 10px; }
-        .ex-text { flex: 1; font-size: 1.1rem; color: #444; }
-        
+        .ex-text { flex: 1; font-size: 1.05rem; color: #444; line-height: 1.4; }
         .btn-audio { background: #f0f2f5; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
         .btn-audio.main { width: 50px; height: 50px; font-size: 24px; background: #e1effe; color: var(--primary); }
-
         .quiz-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
         .quiz-controls button { padding: 12px 25px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
-        
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .flip-hint { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 15px; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
         .modal-content h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -64,13 +51,11 @@
         .btn-save { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-cancel { background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-add-ex { background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85em; cursor: pointer; float: right; }
-        
         #error-box { display: none; background: #ffeaa7; padding: 20px; border: 2px solid #d63031; color: #d63031; border-radius: 10px; margin-bottom: 20px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
     <div id="error-box"></div>
-    
     <div id="app" style="display: none;">
         <nav class="tabs">
             <button @click="currentTab = 'add'" :class="{ active: currentTab === 'add' }">➕ 擴充單字</button>
@@ -87,18 +72,15 @@
                     <span v-else>一鍵獲取</span>
                 </button>
             </div>
-            <p v-if="loading" style="color: #666; font-size: 0.9em;">AI 正在搜集例句與翻譯，請稍候...</p>
         </div>
 
         <div v-show="currentTab === 'bank'" class="section-box">
             <h2>我的單字庫</h2>
-            <div v-if="wordBank.length === 0" style="text-align:center; color:#999; padding: 20px;">載入中...</div>
             <div v-for="(w, index) in wordBank" :key="index" class="word-list-item">
                 <div style="font-size: 1.1em; flex: 1;">
                     <strong>{{ w.word }}</strong> 
                     <button @click="speak(w.word)" style="background:none; border:none; cursor:pointer; font-size:1.2em; margin-left:5px;">🔊</button>
-                    <span style="color:#666; font-size:0.9em; margin-left:5px;">{{ w.phonetic }}</span>
-                    <div style="color: #d9534f; font-size: 0.9em; margin-top: 4px;">{{ w.chinese }}</div>
+                    <div style="color: #d9534f; font-size: 0.9em; margin-top: 4px;">{{ w.chinese }} (共 {{ w.examples ? w.examples.length : 0 }} 句例句)</div>
                 </div>
                 <div class="btn-action-group">
                     <button @click="openEditModal(index)" class="btn-edit">✏️</button>
@@ -110,14 +92,12 @@
         <div v-show="currentTab === 'quiz'">
             <div v-if="quizWords.length > 0">
                 <div style="text-align: center; font-weight: bold; color: #666;">進度: {{ currentQuizIndex + 1 }} / {{ quizWords.length }}</div>
-                
                 <div class="flashcard-scene">
                     <div class="flashcard" :class="{ 'is-flipped': isFlipped }" @click="flipCard">
                         <div class="card-face card-front">
                             <div class="card-header">
                                 <div>
                                     <h3 class="word-title">{{ currentCard.word }}</h3>
-                                    <span class="phonetic">{{ currentCard.phonetic }}</span>
                                 </div>
                                 <button class="btn-audio main" @click.stop="speak(currentCard.word)">🔊</button>
                             </div>
@@ -126,17 +106,12 @@
                                     <div class="ex-text">{{ ex }}</div>
                                     <button class="btn-audio" @click.stop="speak(ex)">🔈</button>
                                 </div>
-                                <div v-if="!currentCard.examples || currentCard.examples.length === 0" style="color:#999; text-align:center; margin-top:20px;">無英文例句</div>
                             </div>
                             <div class="flip-hint">👆 點擊空白處翻面查看解答</div>
                         </div>
-
                         <div class="card-face card-back">
                             <div class="card-header" style="border-bottom-color: #d9534f;">
-                                <div>
-                                    <h3 class="word-title" style="color: #d9534f;">{{ currentCard.chinese }}</h3>
-                                    <span class="phonetic">中文釋義</span>
-                                </div>
+                                <div><h3 class="word-title" style="color: #d9534f;">{{ currentCard.chinese }}</h3></div>
                             </div>
                             <div class="ex-container">
                                 <div v-for="(zhEx, i) in currentCard.chinese_ex" :key="i" class="ex-row" style="background: #fff5f5;">
@@ -147,26 +122,22 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="quiz-controls">
                     <button @click="prevCard" :disabled="currentQuizIndex === 0">⬅️ 上一字</button>
                     <button @click="nextCard" v-if="currentQuizIndex < quizWords.length - 1">下一字 ➡️</button>
                     <button @click="finishQuiz" v-else style="background: #28a745;">🎉 結束測驗</button>
                 </div>
             </div>
-            <div v-else class="section-box" style="text-align:center; padding: 40px;">單字不足，請先擴充！</div>
         </div>
 
         <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
             <div class="modal-content">
                 <h3>編輯單字卡</h3>
                 <div class="form-group"><label>英文單字</label><input v-model="editData.word" type="text"></div>
-                <div class="form-group"><label>音標</label><input v-model="editData.phonetic" type="text"></div>
                 <div class="form-group"><label>中文釋義</label><input v-model="editData.chinese" type="text"></div>
-
                 <div style="margin-top: 25px;">
-                    <label style="font-size: 0.9em; font-weight: bold; color: #555;">例句管理</label>
                     <button @click="addExample" class="btn-add-ex">➕ 新增一句</button>
+                    <label style="font-size: 0.9em; font-weight: bold; color: #555;">例句管理</label>
                 </div>
                 <div style="margin-top: 10px;">
                     <div v-for="(ex, i) in editData.examples" :key="i" class="edit-ex-group">
@@ -174,11 +145,10 @@
                             <span style="font-size: 0.85em; color: var(--primary); font-weight: bold;">句子 {{ i + 1 }}</span>
                             <button @click="removeExample(i)" style="background:none; border:none; color:#ff4757; cursor:pointer;">刪除</button>
                         </div>
-                        <input v-model="editData.examples[i]" type="text" placeholder="英文例句" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px;">
-                        <input v-model="editData.chinese_ex[i]" type="text" placeholder="中文翻譯" style="width:100%; box-sizing:border-box; padding:8px;">
+                        <input v-model="editData.examples[i]" type="text" placeholder="英文例句" style="width:100%; margin-bottom:8px; padding:8px;">
+                        <input v-model="editData.chinese_ex[i]" type="text" placeholder="中文翻譯" style="width:100%; padding:8px;">
                     </div>
                 </div>
-
                 <div class="modal-actions">
                     <button @click="closeEditModal" class="btn-cancel">取消</button>
                     <button @click="saveEdit" class="btn-save">💾 儲存</button>
@@ -188,39 +158,314 @@
     </div>
 
     <script>
-        // 引擎偵測系統
         if (typeof Vue === 'undefined') {
             document.getElementById('error-box').style.display = 'block';
-            document.getElementById('error-box').innerHTML = `<h3>⚠️ 致命錯誤：找不到 Vue 引擎</h3><p>您的網路環境阻擋了 Vue.js 的載入，或者您不小心刪除了第 9 行的 &lt;script&gt; 標籤。<br>請檢查網路或重新複製程式碼！</p>`;
+            document.getElementById('error-box').innerHTML = `<h3>⚠️ 致命錯誤：找不到 Vue 引擎</h3>`;
         } else {
-            // Vue 引擎成功載入，顯示 App
             document.getElementById('app').style.display = 'block';
 
-            const RAW_MASSIVE_DB = [
-                ["office relocation", "辦公室搬遷"], ["reception desk", "接待台"], ["leading supplier", "主要供應商"], ["intended listener", "目標聽眾"], ["consultation", "諮詢"], ["upon", "在...之上,迫近,緊接著"], ["pottery", "陶器"], ["assess", "評價,評估"], ["vitality", "活力;元氣"], ["command", "命令、指揮"], ["fixtures", "固定裝置"], ["naturally", "自然地；天生地"], ["obligation", "義務，責任"], ["I cannot recommend the store enough", "我極力推薦這個店家"], ["verge", "邊緣"], ["a couple of other places", "其他地方"], ["Lost Cause", "注定會失敗的事情"], ["cause", "原因,目標,引起"], ["deal", "交易,合約"], ["disagreed", "不同意(過去式)"], ["diagnose", "診斷"], ["swiftly", "迅速地"], ["generally", "一般地"], ["enhancing", "增強、提高"], ["acceptable", "可接受的"], ["financial means", "財務手段"], ["afford", "負擔得起"], ["appropriate", "適當的"], ["disability", "無力,殘疾"], ["senior", "年長的，進階的"], ["citizen", "公民"], ["mobility", "可動性,變動性"], ["caution", "警告"], ["consumer", "消費者"], ["element", "要素、成分"], ["placement", "放置; 佈置"], ["assurance", "保證"], ["knit belt", "腰帶"], ["even so", "即使如此"], ["despite", "儘管"], ["tablet", "平板電腦"], ["plant", "植物,工廠,種植"], ["leakage", "洩漏"], ["combustion", "燃燒"], ["reaction", "反應"], ["stripping", "剝離"], ["etching", "蝕刻"], ["factor", "因素,要素"], ["stable", "穩定的"], ["dosing", "定量; 配量"], ["externally", "外部地"], ["prevent", "預防,避免"], ["scaling", "縮放,結垢"], ["corrosion", "腐蝕"], ["growth", "增長,發育"], ["consolidate", "鞏固、合併"], ["nightstand", "床頭櫃"], ["mounted", "安裝"], ["within", "在...之內"], ["reserve", "保留"], ["tense", "緊張的"], ["hesitant", "猶豫的"], ["switchover", "替換、互換"], ["honesty", "誠實"], ["unavoidable", "無法避免的"], ["intuitive", "直覺的"], ["streamlined", "有效率的"], ["implement", "執行"], ["encounter", "遇到"], ["halve", "減半"], ["tornado", "龍捲風"], ["distribution", "分發;分配"], ["effort", "努力"], ["medium", "中間,中庸"], ["enforce", "執行"], ["severance", "遣散費"], ["scientific", "科學的"], ["pesticides", "殺蟲劑"], ["upkeep", "保養"], ["harmful", "有害的"], ["contain", "包含"], ["lanyards", "掛繩"], ["swipe card", "感應卡"], ["quotation", "報價單"], ["apron", "圍裙"], ["tough", "困難的"], ["upset", "難過的"], ["costume", "服裝；戲服"], ["industry", "工業,產業"], ["stock", "庫存、股票"], ["energetic", "有活力的"], ["first aid", "急救的"], ["each other", "彼此"], ["apparently", "表面上,顯然地"], ["entrant", "參賽者"], ["constant", "持續的"], ["undergone", "經歷過"], ["spade", "鏟子"], ["restriction", "限制"], ["dieting", "節食"], ["stressful", "有壓力的"], ["enrollment", "加入/招收/登記"], ["refund", "退款"], ["emission", "排放"], ["inclusion", "包括；包含"], ["for instance", "例如"], ["in spite of", "儘管"], ["as for", "至於；關於"], ["now that", "既然,由於"], ["discipline", "學科 紀律"], ["format", "版式;形式"], ["stroll", "散步；閒逛"], ["recipients", "收件人"], ["simultaneously", "同時地"], ["exception", "例外"], ["exceptionally", "非常地"], ["incidentally", "偶然,順便"], ["artificially", "人工地"], ["sculptures", "雕像 雕塑品"], ["outskirts", "郊區"], ["catalog", "目錄"], ["malfunction", "故障"], ["resume", "履歷表、重新開始"], ["otherwise", "否則"], ["identical", "完全相同的"], ["adventure", "冒險"], ["advanced", "先進的；高等的"], ["idealistic", "理想主義的"], ["critice", "評論家"], ["critical", "批評的"], ["suitable", "適合的"], ["naive", "天真的;幼稚的"], ["blacksmith", "鐵匠"], ["textile weaving", "紡織編織"], ["accessible", "可使用的"], ["interpreter", "口譯員"], ["involved", "有關的，牽涉在內的"], ["comprised", "包含， 組成"], ["wheel chair", "輪椅"], ["impeller", "葉輪"], ["suction", "抽吸"], ["discharge", "釋放"], ["refining", "提煉"], ["spool", "線軸"], ["radiation", "輻射"], ["compared", "比較的; 對照的"], ["suspect", "懷疑"], ["panel discussions", "小組討論"], ["appeal", "呼籲,要求;吸引力"], ["indigenous", "本土的,土著的"], ["domestic", "家裏的;國內的"], ["interest", "興趣"], ["aligned", "對齊的"], ["behalf", "代表,利益"], ["vintage", "經典的；最好的"], ["dedicated", "專注的"], ["preloved", "二手"], ["sourcing", "採購"], ["bite", "咬,一口"], ["varies", "變化"], ["inclusive", "包含的"], ["collectibles", "收藏品"], ["desirable", "理想的"], ["sustainability", "永續性"], ["reputation", "名聲"], ["instantly", "立即地"], ["optimally", "最理想地"], ["explicitly", "明確地"], ["similarly", "同樣地"], ["dissatisfied", "不滿意的"], ["value", "價值"], ["rude", "無禮的"], ["recent", "最近的"], ["antique", "古代的、古董的"], ["acquisition", "獲得"], ["solicit funding", "募集資金"], ["enabled", "啟動的"], ["inner-city school", "市內學校"], ["suitcase", "行李箱"], ["visibility", "能見度"], ["summit", "頂點,最高階層"], ["newcomer", "新手;初學者"], ["scene", "場景"], ["attracting", "吸引"], ["extracting", "提取 萃取"], ["simplifying", "簡化"], ["funeral", "葬禮"], ["leisure", "休閒"], ["navigate", "導航"], ["faucet", "水龍頭"], ["water dispenser", "飲水機"], ["barriers", "障礙物"], ["spillage", "溢出；溢出量"], ["armrests", "扶手"], ["outlined", "大綱 概述"], ["reusable", "可重複使用的"], ["uncover", "揭開...的蓋子"], ["depicting", "描繪"], ["intake form", "入學表格"], ["commitment", "承諾,保證"], ["rectified", "糾正"], ["glitch", "小故障、小毛病"], ["minor", "未成年人 次要的"], ["promptly", "即時"], ["guidance", "指導"], ["revamping", "改造"], ["liability", "責任；義務"], ["dedication", "貢獻, 奉獻"], ["farewell party", "歡送會"], ["symposium", "研討會"], ["due to", "由於"], ["giant", "巨人；巨大的"], ["due", "到期的"], ["cushion", "坐墊"], ["avocado", "酪梨"], ["prawn", "明蝦,大蝦"], ["absent", "缺席的"], ["recipe", "食譜"], ["reluctant", "不情願的"], ["pitiful", "可憐的 令人同情的"], ["dismayed", "沮喪的"], ["spices", "调味料"], ["to reach an agreement", "達成協議"], ["reach an item", "伸手拿物品"], ["come to a conclusion", "得出結論"], ["hold a meeting", "舉行會議"], ["metropolitan", "大都會的"], ["pay an invoice", "支付發票"], ["components", "成份,組成"], ["throughout", "徹頭徹尾,自始至終"], ["reach", "到達,伸手，達成"], ["migrate", "遷徙"], ["inherited", "遺傳的"], ["comedians", "喜劇演員"], ["sense", "感覺"], ["quarterly", "每季的"], ["readership", "讀者"], ["complimented", "稱讚"], ["measure", "測量,措施，尺碼"], ["accidentally", "偶然地,意外地"], ["orientation", "定向，目標，新生訓練"], ["mandatory", "命令的;強制的"], ["stationery supplies", "文具用品"], ["fortified", "加強的"], ["magnified", "放大, 擴大"], ["certified", "被證明的；公認的"], ["justified", "有正當理由的"], ["formerly", "以前"], ["submit", "提交"], ["remarkably", "非常地；明顯地"], ["rigid", "堅硬的;嚴格的"], ["present", "目前的,贈送,提出"], ["humor", "幽默"], ["assortment", "各式各樣"], ["markers", "彩色筆"], ["courteous", "有禮貌的"], ["prompt", "迅速的，立即的"], ["rate", "比率,速度,價格"], ["contributing", "貢獻 促成"], ["specified", "指定的"], ["amount", "數量"], ["assignment", "任務,作業;分配"], ["wage", "工資"], ["profit", "利潤"], ["supervisory experience", "管理經驗"], ["achieved", "達成"], ["formulas", "配方；公式"], ["associate", "聯想"], ["finance", "財務"], ["after all", "畢竟"], ["as long as", "只要"], ["emphasis", "強調、重點"], ["cuisines", "美食"], ["recycling", "回收"], ["conveyor belt", "輸送帶"], ["discarded", "廢棄的"], ["landfill", "垃圾掩埋場"], ["disposal", "處理,清除"], ["discs", "光盤"], ["cardboard", "厚紙板"], ["flattened", "壓扁"], ["barrier", "障礙物;柵欄"], ["shredded", "切絲"], ["magnet", "磁鐵"], ["sort", "排序,挑選,分揀"], ["crush", "壓碎"], ["shatter", "粉碎;砸碎"], ["optical scanner", "光學掃描機"], ["raw materials", "原料"], ["fill", "裝滿"], ["diverse", "多樣的"], ["broader", "寬闊的"], ["enthusiasm", "熱情，熱忱"], ["aspects", "外觀, 方面"], ["promise", "承諾"], ["spread", "散佈"], ["enterprise", "企業,事業心"], ["frustrated", "沮喪的"], ["approach", "接近,靠近"], ["consider", "考慮"], ["set up", "設立；設置"], ["riders", "乘客"], ["as usual", "一如往常地"], ["suspense", "暫時停止"], ["following periods", "以下期間"], ["sustain", "承受,支援,維持"], ["begin a task shortly", "盡快開始任務"], ["clogged drain", "排水管阻塞"], ["standing water", "積水"], ["division", "部門"], ["literacy", "讀寫能力"], ["Bachelor's Degree", "學士學位"], ["expand", "擴大"], ["extend", "延長"], ["workforce", "勞動力"], ["retention", "保留,保持"], ["retention and advancement", "留任與晉升"], ["fill out", "填寫"], ["as mentioned", "如前所述"], ["in the meantime", "在此時，期間"], ["in order that", "為了；以便"], ["aim", "目標"], ["equipped", "裝備的；備有"], ["intent", "意圖;目的"], ["auditorium", "禮堂"], ["native", "本地的"], ["thrilled", "非常興奮的"], ["audience", "觀眾"], ["vocal", "聲音的"], ["fearless", "大膽的,勇敢的"], ["costume", "服裝"], ["exquisite", "精緻的"], ["implied", "暗指的"], ["fictional", "虛構的"], ["delighted", "高興的"], ["ordinary", "普通的,平凡的"], ["mill", "製造廠,工廠"], ["roasting", "焙燒"], ["excellence", "卓越"], ["finest", "好的,出色的"], ["career", "事業"], ["culminating", "到絕頂的，最終的"], ["founder", "創辦人"], ["exhibition", "展覽,表現"], ["trend", "趨勢"], ["sidewalk", "人行道"], ["laundry", "洗衣店"], ["break even", "收支平衡的"], ["refurbishment", "整修、翻新"], ["roster", "名冊"], ["vacancy", "空缺"], ["suffering", "痛苦,苦難"], ["illness", "疾病"], ["engage", "與...互動"], ["nationwide", "全國性的"], ["receipt", "收據"], ["paperless", "無紙化"], ["statement", "聲明,陳述"], ["company outing", "公司旅遊"], ["noise", "噪音"], ["architect", "建築師"], ["distinct", "明顯的,清楚的"], ["meanwhile", "同時,在此期間"], ["submission", "屈從，歸順，投降"], ["poems", "詩歌"], ["urgency", "緊急"], ["investigate", "調查,研究"], ["demonstrate", "示範,證明"], ["inadequate", "不適當的"], ["record", "記錄"], ["ferry", "渡輪"], ["perspective", "觀點"], ["reassurance", "安心,放心"], ["conduct", "進行"], ["therapy", "治療"], ["precise", "精確的"], ["negotiate", "談判,協商"], ["evaluate", "評估"], ["finalize", "最終的，定案"], ["outstanding", "傑出的,未完成的"], ["applicant", "申請人"], ["proficiency", "專業能力"], ["reimburse", "償還,補償"], ["recipient", "收件人"], ["defective", "有瑕疵的"], ["duration", "持續時間"], ["reception", "招待會"], ["joint", "接合;關節"], ["ambiance", "氣氛"], ["famed", "著名的；聞名的"], ["proven", "被證明的"], ["promising", "有前途的"], ["authentic", "真實的,可靠的"], ["contradict", "反駁；牴觸、矛盾"], ["inquire", "詢問"], ["accomplishment", "成就"], ["eligible", "有資格的"], ["terminate", "終止"], ["expired", "過期的"], ["coordinate", "協調"], ["administrator", "管理人,行政官"], ["priorities", "優先順序"], ["renew", "更新 恢復 續訂"], ["innovative", "創新的"], ["brochure", "小冊子"], ["merger", "合併（公司）"], ["response", "回應"], ["cooperate", "協力、合作"], ["annually", "每年地"], ["valid", "有效的"], ["infer", "推斷，推定"], ["proceeds", "收益、收入"], ["dependency", "依賴、仰賴"], ["movement", "運動,動作,運轉"], ["exhibit", "展示"], ["sensitive", "敏感的"], ["overlaps", "重疊"], ["proper", "適當的"], ["warmup", "暖身"], ["alternative", "兩者挑一的"], ["dramatic", "戲劇性的"], ["wise", "有智慧的"], ["composer", "作曲家"], ["illustration", "插圖"], ["novice", "新手,初學者"], ["neither", "兩者都不"], ["rapidly", "迅速地"], ["limit", "限制,減少"], ["expenditure", "支出, 花費"], ["pooled", "彙總"], ["divided", "平均分攤"], ["entire", "全部的"], ["waitstaff", "服務人員"], ["onto", "在...之上"], ["brokerage firm", "仲介公司"], ["conserve", "保存"], ["above", "在...上面"], ["contractor", "承包商"], ["instruction", "指示"], ["whenever", "每當"], ["above all", "最重要的是"], ["as well as", "以及"], ["in order to", "為了"], ["avenues", "途徑,方法,大街"], ["boundaries", "界線,範圍"], ["framework", "架構"], ["portable", "可攜帶的"], ["outcome", "結果"], ["prepaid", "預付的"], ["aboard", "登上"], ["prior to", "在⋯之前"], ["as much as", "跟~一樣"], ["diligently", "勤奮地"], ["plus", "加(上)"], ["whose", "誰的"], ["attempting", "嘗試"], ["as soon as possible", "儘快"], ["referral", "轉診，轉介"], ["attraction", "景點；吸引"], ["along with", "與...一起"], ["affordable", "負擔得起的"], ["tripled", "三倍"], ["steady", "穩定的"], ["thoughtful", "體貼周到的"], ["entertainment", "娛樂活動"], ["sign-up sheet", "報名表"], ["nuts", "堅果"], ["substance", "物質"], ["redirect", "改寄；改變方向"], ["high marks", "高分，高評價"], ["monthly issue", "期刊"], ["avid", "熱情的"], ["principal", "校長,主要的"], ["predecessor", "前任、前輩"], ["outperformed", "表現優於"], ["influence", "影響"], ["dried up", "乾涸"], ["tried", "嘗試"], ["tired", "疲倦的"], ["remain", "逗留;剩餘"], ["amount remaining", "剩餘金額"], ["forgetful", "健忘的"], ["tangible", "有形的、有實體的"], ["jealous", "嫉妒的"], ["narrow", "狹窄的"], ["venture", "冒險;企業"], ["situation", "情況；處境"], ["hikers", "遠足者"], ["noteworthy", "值得注意的"], ["restore", "恢復"], ["housewarming", "喬遷派對"], ["countertop", "流理台"], ["custom", "定制,自定義，海關"], ["egg beater", "打蛋機"], ["tea kettle", "茶壺"], ["toaster", "烤麵包機"], ["cheese grater", "乳酪研磨器"], ["dealt with", "處理"], ["airfare", "飛機票價"], ["pricing", "定價"], ["compensation", "補償,賠償金"], ["redeemed", "贖回,兌換"], ["generating", "產生"], ["vitally", "十分;極其"], ["novel", "小說,新奇的"], ["immeasurable", "無法估計的，廣大的"], ["ramp up", "上升,提高,增加"], ["massive", "巨大的；大量的"], ["plank", "厚板 木板"], ["iconic", "代表性的"], ["accessories", "配件;飾品"], ["aftermath", "後遺症"], ["concert", "音樂會"], ["neighbors", "鄰居"], ["mug", "馬克杯"], ["demonstration", "示範,展示"], ["decrease", "減少；降低"], ["commuter", "通勤者"], ["scarves", "圍巾"], ["journalist", "記者"], ["negotiation", "談判"], ["brew", "釀造,泡茶"], ["perfection", "完美"], ["probationary", "實習中的"], ["involuntary", "非自願的"], ["testimonials", "推薦"], ["seal", "密封,印章"], ["prominent", "重要的，知名的"], ["stack", "整齊堆放"], ["surge", "波濤洶湧、激增"], ["ought", "應該"], ["irreversible", "不可逆轉的"], ["compatible", "相容的"], ["occupancy", "佔有,居住"], ["cluttered", "亂七八糟的"], ["appearance", "外觀,外表"], ["improper", "不適當的"], ["gadget", "小配件,小玩意"], ["disabled", "殘疾的，喪失能力的"], ["breaker", "斷路器"], ["deductible", "可扣除的"], ["misfortune", "不幸"], ["sufficient", "足夠的"], ["worthless", "無價值的"], ["forklift", "堆高機"], ["sumptuous", "奢侈的,華麗的"], ["vinyl", "黑膠唱片"], ["dividends", "股利,分紅"], ["underwent", "經歷"], ["aisle", "走道"], ["exclusively", "專門地"], ["swamp", "沼澤"], ["desert", "沙漠"], ["bats", "蝙蝠"], ["plummet", "暴跌,墜落"], ["as well", "也；同樣地"], ["podiatrist", "足科醫生"], ["conjunction", "連接詞;連結"], ["bearer", "持有人,持票人"], ["prohibition", "禁止;禁令"], ["equates", "相當於"], ["sneakers", "運動鞋"], ["properly", "適當地"], ["conditioner", "潤髮乳"], ["fair", "博覽會 公平的"], ["fairly", "相當地"], ["complicate", "複雜的"], ["address a complication", "解決複雜問題"], ["pallet", "棧板"], ["hold off", "拖延"], ["stunning", "令人震驚的"], ["vibrant", "充滿活力的"], ["processor", "處理器"], ["concluded", "總結"], ["garment", "衣服,衣裝"], ["affect", "影響"], ["flood", "洪水,水災"], ["turn in", "交還，上交"], ["respective", "分別的 各自的"], ["praise", "稱讚"], ["justification", "正當理由、辯護"], ["glowing", "熾熱的, 容光煥發的"], ["bright", "明亮的"], ["military", "軍隊,軍事的"], ["population", "人口,人口數"], ["popularity", "受歡迎 流行"], ["keychain", "鑰匙圈"], ["greeter", "招待員"], ["on the spot", "當場"], ["empower", "授權"], ["enroll", "註冊"], ["visionary", "有遠見的"], ["inspire", "激勵"], ["mindset", "心態; 傾向"], ["unleash", "釋放"], ["warning light", "警示燈"], ["transformative", "徹底改觀的"], ["landscape", "風景、景色"], ["adoption", "領養"], ["vaccination", "疫苗接種"], ["interact", "互動；交流"], ["elevate", "舉起,抬起"], ["railway", "鐵路"], ["disruption", "中斷，破壞"], ["poll", "民意調查"], ["thickness", "厚、厚度"], ["capable", "有能力的"], ["resort", "度假勝地,採取,求助"], ["casually", "偶然地,臨時地"], ["mutually", "互相地,互助"], ["outage", "電力中斷；斷電"], ["tap water", "自來水"], ["grant", "同意,准予"], ["exact", "精確的,確切的"], ["voluntary", "自願的"], ["debate", "辯論"], ["incredibly", "難以置信地"], ["provincial", "鄉下人,地方的"], ["allergy", "過敏"], ["disclosed", "揭發"], ["trap", "困住"], ["shimmer", "閃爍"], ["dial", "撥號"], ["capabilities", "潛在能力"], ["overcome", "克服/戰勝"], ["dazzle", "使眼花;使驚羨"], ["entertaining", "有趣的"], ["teammates", "隊友"], ["engaging", "有吸引力的"], ["adapt", "適應"], ["vital", "極其重要的"], ["involvement", "參與/涉入"], ["storm", "暴風雨"], ["severe", "嚴重的"], ["meter", "公尺，儀表"], ["restructuring", "改組；重整"], ["greatest", "最偉大的"], ["kits", "工具組"], ["continent", "洲；大陸"], ["experimental", "實驗性的"], ["diabetes", "糖尿病"], ["rollout", "首次公開"], ["manners", "禮貌"], ["chain", "連鎖店"], ["wrap", "包裝/用...包裹"], ["exceed", "超過；超出"], ["urged", "催促"], ["napkin", "餐巾"], ["distillery", "蒸餾所"], ["creamery", "乳品工廠"], ["talented", "有才能的"], ["positive", "積極的；正面的"], ["explosive", "爆炸性的"], ["lease", "租約"], ["landlord", "房東"], ["convince", "說服"], ["knack", "訣竅;竅門"], ["scented candle", "香氛蠟燭"], ["herbal tea", "花草茶"], ["declare", "宣布"], ["uppercase", "大寫"], ["unwillingly", "不情願地"], ["discrepancies", "差異"], ["slip", "滑落"], ["file", "檔案,提出申請"], ["expel", "驅逐,開除"], ["raspberry", "覆盆子"], ["chamomile", "洋甘菊"], ["mint", "薄荷"], ["ginger", "薑"], ["handling", "處理,管理"], ["scout", "球探,偵查"], ["sole", "單獨的，唯一的"], ["drop off", "下車,留下"], ["over-reliance", "過度依賴"], ["crammed", "塞滿的,擠滿的"], ["made up", "捏造的,虛構的"], ["unlike", "不同的;不相似的"], ["less", "較少的"], ["among", "在...之中"], ["clam", "蛤蜊"], ["incur", "招致,產生"], ["remit", "匯款"], ["endure", "忍受"], ["penalties", "處罰"], ["balance", "平衡.結餘"], ["nurturing", "培育"], ["minutes", "分鐘，記錄"], ["primary goal", "主要目標"], ["mentorship", "導師制"], ["fostering", "培養"], ["up to", "最多"], ["through to", "直到.."], ["spend", "花費"], ["utilize", "利用"], ["authorization", "授權,認可"], ["dehydration", "脫水；乾燥"], ["association", "協會"], ["vaccine", "疫苗"], ["rarely", "不常.很少"], ["negligent", "粗心的"], ["concise", "簡潔的"], ["expect", "期待"], ["immensely", "極度，非常"], ["contested", "有爭議的"], ["strive", "努力,奮鬥"], ["two-story", "兩層樓"], ["extravaganza", "華麗的表演"], ["register", "登記,注冊"], ["tuition", "講授,學費"], ["counselor", "顧問"], ["detect", "探測"], ["occur", "發生,存在"], ["conceals", "隱蔽, 隱藏"], ["tolerates", "忍受; 容忍"], ["entitle", "給...權利"], ["underqualified", "不符資格的"], ["reward", "報酬、獎賞"], ["culinary", "廚房的,烹調用的"], ["gelato", "義式冰淇淋"], ["fermentation", "發酵作用"], ["bond", "債券"], ["behavior", "行為 舉止"], ["valuable", "有價值的"], ["appreciable", "明顯的"], ["disposable", "拋棄式的"], ["clasp", "緊握"], ["chin", "下巴"], ["strap", "皮帶,捆紮"], ["batch", "一批;一群"], ["aforementioned", "上述的,前述的"], ["injury", "傷害"], ["flammable", "易燃的,可燃性的"], ["endanger", "危及；危害"], ["score", "得分"], ["moderately", "適當地,中庸地"], ["signage", "招牌"], ["attitude", "態度,姿勢"], ["grants", "補助；經費"], ["uncensored", "未經審查的"], ["rehearsal", "排練,試演"], ["gangster", "歹徒,流氓"], ["salute", "敬禮"], ["obsession", "著迷"], ["sinful", "有罪的"], ["confession", "供認, 承認"], ["urge", "催促"], ["fabulous", "極好的"], ["debit", "借方；借項"], ["artist", "藝術家"], ["divorce", "離婚"], ["disappoint", "使失望"], ["passionate", "熱情的"], ["vibe", "氛圍"], ["exposure", "暴露,曝光"], ["lifespan", "壽命"], ["bamboo", "竹子"], ["cotton", "棉花"], ["sacrifice", "犧牲"], ["conventional", "傳統的"], ["thirsty", "口渴的"], ["snack", "點心"], ["gone", "消失的"], ["vacuum", "吸塵器"], ["How come?", "怎麼會"], ["grams", "公克"], ["organ", "器官"], ["underestimate", "低估"], ["adapting", "適應"], ["inspiration", "靈感"], ["decor", "裝飾"], ["mayor", "市長"], ["regret", "後悔"], ["presence", "出席"], ["liquidation", "償還,清算"], ["depute", "委託"], ["exclusive", "獨有的,獨佔的"], ["assumption", "假設,推論"], ["immersive", "身臨其境"], ["dip", "浸泡"], ["toe", "腳趾"], ["plenty", "許多,充足的"], ["stepping down", "下台"], ["vast", "巨大的,龐大的"], ["staffing changes", "人事異動"], ["wealth", "財富"], ["semester", "學期"], ["dying", "垂死的"], ["elaborate", "精細的,詳細地說明"], ["preserve", "保存；維護"], ["windfall", "意外之財"], ["annotation", "註解"], ["confidential", "機密的"], ["compact", "緊湊的,簡潔的"], ["intern", "實習生"], ["faculty", "才能,全體教學人員"], ["cope", "應付"], ["usage", "使用,用法"], ["aside", "在...旁邊"], ["premises", "營業場所"], ["sincerely", "真誠地,誠懇地"], ["reserved", "含蓄的,保留的"], ["reopen", "重開,再開始"], ["undergo", "經歷"], ["closure", "停業,關閉"], ["appreciate", "感激"], ["mat", "墊子"], ["impairment", "損害;損傷"], ["certain", "肯定的,必然的"], ["sink", "水槽"], ["tidy", "整潔的"], ["anticipate", "預料"], ["undertake", "從事,承擔"], ["advocates", "提倡者; 擁護者"], ["urban", "都市的"], ["confirmation", "確認、證實"], ["loosely", "鬆散地"], ["agricultural", "農業的"], ["commence", "開始, 著手"], ["seems", "似乎；好像"], ["drill", "操練,練習"], ["goal", "目標"], ["left work on time", "準時下班"], ["breast", "胸部"], ["bubble tea", "珍珠奶茶"], ["taxes", "稅"], ["roots", "根源；根部"], ["conscious", "有意識的"], ["initially", "最初,開始"], ["anxious", "焦急的，憂慮的"], ["sabotage", "蓄意破壞"], ["interferes", "妨礙; 衝突"], ["dyed", "染色"], ["dreaded", "令人懼怕的"], ["curse", "詛咒、咒罵"], ["threat", "威脅"], ["divine", "神的；神聖的"], ["horizon", "地平線"], ["fortunately", "幸運地"], ["indistinguishable", "不能辨別的"], ["higher grades", "高水準的物品"], ["absorb", "吸收,使專心"], ["regional", "地區的"], ["authority", "權威"], ["ban", "禁令,禁止"], ["exercise", "練習,運用,鍛煉"], ["menace", "威脅"], ["illegally", "非法地"], ["impounded", "扣押"], ["simulation", "模擬"], ["overhead", "經常開支"], ["hall", "大廳,禮堂"], ["choir", "合唱團"], ["swap time", "交換時間"], ["extensive", "廣泛的"], ["terrain", "地帶,地形"], ["wildlife", "野生生物"], ["scenery", "風景、景色"], ["embark", "著手、從事"], ["continue", "繼續、持續"], ["Illinois", "伊利諾州"], ["carpet", "地毯"], ["surprise", "驚訝"], ["disgusted", "感到噁心的"], ["admit", "承認"], ["awful", "可怕的"], ["spacious", "寬敞的"], ["incentive", "激勵"], ["adopting", "採用；領養"], ["occasion", "場合；時機"], ["clutter", "弄亂, 零亂"], ["flat", "平的，平坦的"], ["surface", "表面"], ["persistence", "堅持; 持久"], ["reductions", "減少"], ["experiencing", "經歷；體驗"], ["hardship", "艱難"], ["twisting", "扭轉"], ["lid", "蓋子"], ["blade", "刀片,刀刃"], ["clockwise", "順時針"], ["motion", "動作"], ["blended", "混合調配"], ["adequately", "足夠地,充分地"], ["premier", "首相;總理"], ["destination", "目的地；終點"], ["agent", "代理商"], ["itineraries", "行程、旅遊計畫"], ["undetermined", "未確定的"], ["venting", "通風; 排氣"], ["forums", "論壇"], ["slack", "鬆弛的;懈怠的"], ["combat", "戰鬥"], ["invasive", "侵入性的"], ["income stream", "收入來源"], ["unisex", "男女通用的"], ["attire", "服裝，著裝"], ["leash", "狗鍊 皮帶"], ["audit", "稽核,查帳"], ["collar", "衣領"], ["bold", "大膽的"], ["piece", "碎片,部分"], ["unanimously", "無異議地;同意地"], ["dull", "無聊的"], ["praised", "稱讚"], ["express", "表達"], ["invest", "投資"], ["shame", "羞恥"], ["forecast", "預測"], ["shrink", "縮小"], ["ecstatic", "狂喜的、心花怒放的"], ["embarrassed", "難堪的，尷尬的"], ["enraged", "激怒; 使憤怒"], ["unveiled", "公開"], ["mend", "修理；修補"], ["cheat", "欺騙、作弊"], ["ignorance", "無知"], ["feast", "宴會"], ["chamber", "房間"], ["prisoner", "囚犯"], ["champagne", "香檳"], ["alibis", "藉口"], ["live up", "生活，及時行樂"], ["captain", "隊長,領班"], ["sweat", "流汗"], ["courtyard", "庭院"], ["bends", "彎曲"], ["corridor", "走廊,通道"], ["metaphor", "隱喻,暗喻"], ["Arabic", "阿拉伯語"], ["dim", "微暗的;暗淡的"], ["sewing", "裁縫,縫紉"], ["pitcher", "玻璃水壺"], ["aviation", "航空,航空學"], ["nearsighted", "近視"], ["psychiatric", "精神病學的"], ["dermatology", "皮膚醫學"], ["unwilling", "不願意的"], ["stab", "刺 戳"], ["passage", "通道"], ["fountain", "噴水池"], ["adulthood", "成年"], ["underneath", "在...底下"], ["notwithstanding", "儘管"], ["interrupt", "打斷"], ["clipboard", "文件板夾"], ["nominal", "名義上的"], ["configuration", "結構、配置"], ["determine", "決定"], ["careless", "粗心的.草率的"], ["whisper", "耳語"], ["harvest", "收穫"], ["initiate", "開始"], ["span", "一段時間"], ["congestion", "擁塞"], ["expose", "暴露"], ["speculation", "推測"], ["syllabus", "教學大綱"], ["frosting", "糖霜"], ["moisture", "濕氣、水分"], ["versatile", "多才多藝的"], ["furnishings", "傢俱；室內陳設"], ["small-section", "小部分"], ["drawbacks", "缺點, 壞處"], ["disguising", "掩飾"], ["outlay", "費用,支出"], ["on behalf of", "代表,為了..."], ["belongings", "財產,所有物"], ["furthest", "最遠的"], ["opposite", "相反的、對立的"], ["parcel", "小包；包裹"], ["theft", "偷竊"], ["erodes", "腐蝕; 侵蝕"], ["precautionary", "預先警戒的"], ["waiver", "放棄,棄權証書"], ["so far", "到目前為止"], ["taking over", "接管, 繼任"], ["hustle", "慌張"], ["supplemental", "補充的"], ["top tips", "實用技巧"], ["widely", "廣泛地"], ["adhering", "遵守，依照"], ["secretly", "秘密地"], ["limited edition", "限量版"], ["ultimate", "終極的"], ["optimal", "最佳的,最理想的"], ["uniquely", "唯一地"], ["seriously", "嚴肅地,認真地"], ["previously", "先前地,以前地"], ["essential", "必要的；不可缺的"], ["perhaps", "或許,可能"], ["concession", "讓步,特許"], ["elsewhere", "在別處"], ["caught", "捕捉"], ["landslide", "土石流"], ["escape from reality", "逃離現實"], ["sympathy", "同情心"], ["carry on", "繼續"], ["shivers", "顫抖"], ["spine", "脊椎骨"], ["aching", "痛的,疼痛的"], ["behind", "在...後面"], ["fandango", "胡鬧,一種西班牙舞"], ["thunderbolt", "雷電"], ["monstrosity", "怪異,畸形"], ["spit", "唾液,口水"], ["opposed", "反對"], ["session", "會議"], ["no wonder", "難怪"], ["unbeatable prices", "無與倫比的價格"], ["enrich", "使富足,使肥沃"], ["maple", "楓樹"], ["deteriorated", "惡化"], ["annoyed", "惱怒的"], ["merely", "僅僅,只不過"], ["hygiene", "衛生"], ["debris", "碎片,殘骸"], ["sticky", "黏的"], ["residue", "殘渣,剩餘"], ["crumbs", "麵包屑,食物碎屑"], ["appalling", "令人震驚的"], ["excursion", "遠足、短途旅行"], ["seemed", "似乎"], ["mostly", "一般地,通常"], ["made sense", "有道理"], ["ingredient", "成分,因素"], ["rare", "罕見的"], ["instrument", "樂器"], ["interactive", "互動的"], ["discussion", "討論,商議"], ["permanent", "永久的"]
+            // 壓縮版資料庫 [單字, 中文, 英文例句1|英文例句2, 中文例句1|中文例句2]
+            const COMPRESSED_DB = [
+                ["office relocation", "辦公室搬遷", "The office relocation will be completed by next Monday.|We need to pack our desks before the office relocation.", "辦公室搬遷將在下週一前完成。|我們需要在辦公室搬遷前打包好桌面。"],
+                ["reception desk", "接待台", "Please leave the room keys at the reception desk.|Our group of seven gathered at the reception desk.", "請將房間鑰匙留在接待台。|我們七個人在接待台集合。"],
+                ["leading supplier", "主要供應商", "They are the leading supplier of sports equipment.|We signed a contract with the leading supplier.", "他們是運動設備的主要供應商。|我們與該主要供應商簽訂了合約。"],
+                ["intended listener", "目標聽眾", "Make sure your speech reaches the intended listener.|The advertisement didn't attract its intended listener.", "確保你的演講能傳達給目標聽眾。|這則廣告並沒有吸引到它的目標聽眾。"],
+                ["consultation", "諮詢", "I scheduled a quick consultation with the doctor.|The interior designer offers a free consultation.", "我安排了與醫生的快速諮詢。|這位室內設計師提供免費諮詢。"],
+                ["upon", "一...就... / 在...之上", "Upon arrival at the airport, we will rent a car.|They agreed upon the budget for the trip.", "一抵達機場，我們就會去租車。|他們就這趟旅行的預算達成了共識。"],
+                ["pottery", "陶器", "We bought some beautiful handmade pottery as souvenirs.|He is taking a pottery class on weekends.", "我們買了一些美麗的手工陶器當紀念品。|他週末在上有陶藝課。"],
+                ["assess", "評估", "We need to assess the cost of the 10-day trip.|The coach will assess the players' fitness levels.", "我們需要評估這趟 10 天旅行的花費。|教練將評估球員們的體能狀況。"],
+                ["vitality", "活力", "Working out weekly helps me maintain my vitality.|The fresh mountain air filled us with vitality.", "每週健身有助於我保持活力。|清新的高山空氣讓我們充滿了活力。"],
+                ["command", "命令 / 指揮", "The dog immediately obeyed his command.|She has a good command of the English language.", "那隻狗立刻服從了他的命令。|她精通英語（對英語有很好的掌握）。"],
+                ["fixtures", "固定裝置", "We are choosing new lighting fixtures for the living room.|The bathroom fixtures were recently updated.", "我們正在為客廳挑選新的照明燈具（固定裝置）。|浴室的固定設備最近剛更新過。"],
+                ["naturally", "自然地 / 當然", "Try to speak naturally when ordering food.|Naturally, we will split the bill seven ways.", "點餐時盡量自然地說話。|當然，我們會把帳單分成七份。"],
+                ["obligation", "義務 / 責任", "You have no obligation to buy anything in that store.|It is our obligation to clean up before leaving.", "你在那家店裡沒有義務購買任何東西。|離開前清理乾淨是我們的責任。"],
+                ["I cannot recommend the store enough", "我極力推薦這家店", "The service was perfect; I cannot recommend the store enough.|If you want a great burger, I cannot recommend the store enough.", "服務太完美了；我極力推薦這家店。|如果你想吃超讚的漢堡，我極力推薦這家店。"],
+                ["verge", "邊緣", "I was on the verge of canceling the trip.|The company is on the verge of a major breakthrough.", "我差點（處於邊緣）就要取消這趟旅行了。|這家公司正處於重大突破的邊緣。"],
+                ["a couple of other places", "其他幾個地方", "We plan to visit a couple of other places in New York.|Let's check a couple of other places before deciding.", "我們打算去紐約的其他幾個地方看看。|在決定之前，我們再去其他幾個地方看看吧。"],
+                ["lost cause", "注定失敗的事", "Trying to change his mind is a lost cause.|Don't waste energy on a lost cause.", "試圖改變他的想法是白費力氣（注定失敗）。|別把精力浪費在注定失敗的事情上。"],
+                ["cause", "原因 / 引起", "What was the root cause of the delay?|The bad weather caused our flight to be canceled.", "延誤的根本原因是什麼？|惡劣的天氣導致我們的航班被取消。"],
+                ["deal", "交易 / 處理", "We got a great deal on our hotel rooms.|Let me deal with this problem.", "我們的飯店房間拿到了很棒的折扣（交易）。|讓我來處理這個問題。"],
+                ["disagreed", "不同意", "They strongly disagreed on where to eat tonight.|I disagreed with his proposed itinerary.", "他們對於今晚去哪吃飯意見非常不合。|我不同意他提議的行程。"],
+                ["diagnose", "診斷", "The doctor was unable to diagnose his illness.|It is hard to diagnose the problem with the car.", "醫生無法診斷出他的病情。|很難診斷出這輛車的問題出在哪。"],
+                ["swiftly", "迅速地", "The waitress moved swiftly to bring our drinks.|We need to act swiftly to catch the train.", "女服務生迅速地把我們的飲料送來。|我們需要迅速行動才趕得上火車。"],
+                ["generally", "通常 / 大致上", "Americans generally leave a 15 to 20 percent tip.|I generally wake up at 7 AM.", "美國人通常會留 15% 到 20% 的小費。|我通常早上七點起床。"],
+                ["enhancing", "增強 / 提升", "We are looking for ways of enhancing the customer experience.|Reading news is great for enhancing your English.", "我們正在尋找提升顧客體驗的方法。|閱讀新聞對增強你的英文很有幫助。"],
+                ["acceptable", "可接受的", "Is this casual outfit acceptable for the restaurant?|The proposed budget is completely acceptable.", "這套休閒服裝去那家餐廳可以接受嗎？|提出來的預算完全可以接受。"],
+                ["financial means", "財力 / 財務手段", "They lack the financial means to support the project.|Do we have the financial means for a longer trip?", "他們缺乏財力來支持這個專案。|我們有足夠的財力延長旅程嗎？"],
+                ["afford", "負擔得起", "We can't afford to miss this flight.|If we split the cost, everyone can afford it.", "我們承擔不起錯過這班飛機的後果。|如果我們平攤費用，每個人都負擔得起。"],
+                ["appropriate", "適當的", "Please wear appropriate clothing for the hike.|Is this an appropriate time to call?", "請穿著適當的服裝去健行。|現在打電話是適當的時機嗎？"],
+                ["disability", "殘疾", "The museum is fully accessible for people with a disability.|He overcame his physical disability to win the race.", "這間博物館對殘疾人士來說完全無障礙。|他克服了身體的殘障贏得了比賽。"],
+                ["senior", "年長的 / 資深的", "Senior citizens get a discount at this cinema.|He is a senior engineer at the tech company.", "年長者在這家電影院可享折扣。|他是那家科技公司的資深工程師。"],
+                ["citizen", "公民", "Are you a U.S. citizen?|Every citizen has the right to vote.", "你是美國公民嗎？|每個公民都有投票權。"],
+                ["mobility", "機動性 / 活動力", "Regular exercise helps maintain joint mobility.|The new smartphone offers greater mobility for work.", "規律運動有助於維持關節活動力。|新的智慧型手機為工作提供了更大的機動性。"],
+                ["caution", "警告 / 謹慎", "Proceed with caution when driving in the snow.|The sign advised caution due to the wet floor.", "在雪地開車請謹慎前行。|告示牌警告因為地板濕滑要小心。"],
+                ["consumer", "消費者", "The company aims to protect consumer rights.|Consumer demand for eco-friendly products is rising.", "公司致力於保護消費者權益。|消費者對環保產品的需求正在上升。"],
+                ["element", "要素 / 元素", "Trust is a key element in any relationship.|We need to consider the element of surprise.", "信任是任何關係中的關鍵要素。|我們需要把驚喜這個元素考慮進去。"],
+                ["placement", "放置 / 佈置", "The product placement in the movie was very obvious.|We discussed the placement of the new sofa.", "這部電影裡的產品置入（放置）非常明顯。|我們討論了新沙發的擺放位置。"],
+                ["assurance", "保證", "He gave me his assurance that the car would be ready.|I need some assurance before I sign the contract.", "他向我保證車子會準備好。|在簽約之前我需要一些保證。"],
+                ["knit belt", "針織腰帶", "She bought a colorful knit belt to match her dress.|A knit belt is comfortable for a long flight.", "她買了一條色彩繽紛的針織腰帶搭配洋裝。|搭長途飛機時繫針織腰帶很舒服。"],
+                ["even so", "即使如此", "It's raining heavily; even so, we will go out.|The trip was exhausting. Even so, I had a great time.", "雨下得很大；即使如此，我們還是要出門。|這趟旅行很累人。即使如此，我還是玩得很開心。"],
+                ["despite", "儘管", "We arrived on time despite the heavy traffic.|He smiled despite the pain.", "儘管交通擁擠，我們還是準時抵達了。|儘管很痛，他還是笑了。"],
+                ["tablet", "平板電腦 / 藥片", "I downloaded some movies onto my tablet for the flight.|Take one tablet twice a day after meals.", "我下載了一些電影到平板電腦裡準備在飛機上看。|這個藥片每天兩次，飯後服用。"],
+                ["plant", "植物 / 工廠 / 種植", "Don't forget to water the plant while I am away.|The car manufacturing plant employs thousands of people.", "我不在的時候別忘了幫植物澆水。|這家汽車製造廠雇用了數千名員工。"],
+                ["leakage", "洩漏", "The plumber fixed the water leakage in the bathroom.|There was a sudden gas leakage in the building.", "水管工修好了浴室的漏水。|大樓裡突然發生了瓦斯外洩。"],
+                ["combustion", "燃燒", "The engine works by internal combustion.|Combustion produces heat and light.", "引擎是靠內燃（內部燃燒）運作的。|燃燒會產生熱和光。"],
+                ["reaction", "反應", "What was his reaction when you told him the news?|I had a bad allergic reaction to the seafood.", "當你告訴他這個消息時，他有什麼反應？|我對這海鮮產生了嚴重的過敏反應。"],
+                ["stripping", "剝離", "They are stripping the old paint off the walls.|Stripping the cables requires a special tool.", "他們正在把牆上的舊油漆剝離掉。|剝開電纜外皮需要特殊工具。"],
+                ["etching", "蝕刻", "The artist is famous for his glass etching.|The serial number is made by laser etching.", "這位藝術家以他的玻璃蝕刻聞名。|序號是透過雷射蝕刻製作的。"],
+                ["factor", "因素", "Price was a major factor in our decision.|We must consider the weather factor before going out.", "價格是我們決定的一大因素。|出門前我們必須考慮天氣因素。"],
+                ["stable", "穩定的", "The patient's condition is now stable.|I need a stable internet connection for my work.", "病人的情況現在穩定了。|我工作需要穩定的網路連線。"],
+                ["dosing", "定量 / 劑量分配", "Proper dosing of the medicine is very important.|The machine handles the dosing of the chemicals.", "正確分配藥物劑量非常重要。|這台機器負責化學物質的定量分配。"],
+                ["externally", "外部地", "This medicine should only be used externally.|The building was externally damaged by the storm.", "此藥物僅供外部使用（外用）。|這棟建築物外部受到了風暴的破壞。"],
+                ["prevent", "預防 / 阻止", "Exercise can help prevent heart disease.|The security guard tried to prevent him from entering.", "運動有助於預防心臟病。|警衛試圖阻止他進入。"],
+                ["scaling", "縮放 / 結垢", "The pipes were blocked due to heavy scaling.|Scaling the business will require more capital.", "水管因為嚴重的結垢而堵塞了。|擴張（縮放）業務將需要更多資金。"],
+                ["corrosion", "腐蝕", "The sea air causes rapid corrosion of the metal.|This paint protects the car against corrosion.", "海風會導致金屬迅速腐蝕。|這款油漆可以保護汽車免受腐蝕。"],
+                ["growth", "增長 / 發展", "The company has seen rapid growth this year.|Personal growth is just as important as your career.", "公司今年的業績增長非常迅速。|個人成長和你的事業一樣重要。"],
+                ["consolidate", "鞏固 / 合併", "Let's consolidate our luggage into one big suitcase.|The two banks decided to consolidate.", "我們把行李合併到一個大行李箱裡吧。|這兩家銀行決定合併。"],
+                ["nightstand", "床頭櫃", "I left my phone on the nightstand.|There is a small lamp on the nightstand.", "我把手機留在床頭櫃上了。|床頭櫃上有一盞小燈。"],
+                ["mounted", "安裝的 / 固定的", "The TV is securely mounted on the wall.|He easily mounted the horse.", "電視牢固地安裝在牆上。|他輕鬆地跨上了馬。"],
+                ["within", "在...之內", "The hotel is within walking distance of the beach.|Please reply within three business days.", "這間飯店在步行即可抵達海灘的距離之內。|請在三個工作天內回覆。"],
+                ["reserve", "保留 / 預訂", "I would like to reserve a table for seven people.|We need to reserve our energy for tomorrow's hike.", "我想要預訂一桌七個人的位子。|我們需要為明天的健行保留體力。"],
+                ["tense", "緊張的", "The atmosphere in the meeting room was very tense.|Don't be so tense; just relax and enjoy the trip.", "會議室裡的氣氛非常緊張。|別這麼緊張；放輕鬆享受這趟旅行吧。"],
+                ["hesitant", "猶豫的", "She was hesitant to try the spicy food.|Don't be hesitant to ask the locals for directions.", "她對於嘗試辛辣的食物感到猶豫。|向當地人問路不要猶豫。"],
+                ["switchover", "切換 / 互換", "The switchover to the new system happens tonight.|We planned a driver switchover halfway through the road trip.", "切換到新系統的工作將在今晚進行。|我們計畫在公路旅行中途互換駕駛。"],
+                ["honesty", "誠實", "I appreciate your honesty in this matter.|Honesty is the best policy.", "我很感激你在這件事上的誠實。|誠實為上策。"],
+                ["unavoidable", "無法避免的", "Some delays are completely unavoidable.|Tension in a group of seven can sometimes be unavoidable.", "有些延誤是完全無法避免的。|七個人的團體中，有時候緊張氣氛是無法避免的。"],
+                ["intuitive", "直覺的", "The new software has a very intuitive interface.|Her intuitive sense led her in the right direction.", "這個新軟體有著非常直覺的介面。|她的直覺引導她走向正確的方向。"],
+                ["streamlined", "簡化的 / 有效率的", "They streamlined the check-in process at the airport.|We need a streamlined workflow for the office relocation.", "他們簡化了機場的報到流程。|我們需要為辦公室搬遷制定一套有效率的工作流程。"],
+                ["implement", "執行 / 實施", "The government will implement new tax laws next year.|We need to implement this strategy immediately.", "政府明年將實施新的稅法。|我們需要立刻執行這項策略。"],
+                ["encounter", "遇到 / 遭遇", "Did you encounter any problems at customs?|We had a friendly encounter with the locals.", "你在海關有遇到什麼問題嗎？|我們和當地人有了一次友好的相遇。"],
+                ["halve", "減半", "The store decided to halve the price of winter coats.|We managed to halve our travel expenses.", "這家店決定將冬季外套的價格減半。|我們成功把旅行費用減半了。"],
+                ["tornado", "龍捲風", "The tornado destroyed several houses in the town.|We had to seek shelter when the tornado warning sounded.", "龍捲風摧毀了鎮上的幾棟房子。|當龍捲風警報響起時，我們必須尋找掩護。"],
+                ["distribution", "分發 / 分配", "The distribution of supplies took a long time.|Wealth distribution is a major economic issue.", "物資的分發花了很長的時間。|財富分配是一個重大的經濟問題。"],
+                ["effort", "努力", "It takes a lot of effort to learn a new language.|Thanks for your effort in organizing this group trip.", "學習一門新語言需要花費很多努力。|感謝你努力籌辦這次的團體旅行。"],
+                ["medium", "中等的 / 媒介", "I would like my steak cooked medium, please.|English is the medium of instruction in this school.", "我的牛排要五分熟（中等），謝謝。|英語是這所學校的教學媒介。"],
+                ["enforce", "執行 / 強制", "The police will strictly enforce the speed limit.|It is hard to enforce this new rule.", "警察將嚴格執行速限。|這項新規定很難強制執行。"],
+                ["severance", "遣散費", "He received a generous severance package when he was laid off.|The company offered severance pay to the departing employees.", "他被資遣時收到了一筆豐厚的遣散費。|公司向離職的員工提供了遣散費。"],
+                ["scientific", "科學的", "There is no scientific evidence to support this claim.|He is conducting a scientific experiment.", "沒有科學證據支持這種說法。|他正在進行一項科學實驗。"],
+                ["pesticides", "殺蟲劑", "Organic farmers do not use chemical pesticides.|Wash the fruit carefully to remove any pesticides.", "有機農夫不使用化學殺蟲劑。|仔細清洗水果以去除任何殘留的殺蟲劑。"],
+                ["upkeep", "保養 / 維修費", "The upkeep of a large house can be very expensive.|Tenants are responsible for the basic upkeep of the apartment.", "大房子的保養費可能會非常昂貴。|租客有責任進行公寓的基本維護。"],
+                ["harmful", "有害的", "Too much sun exposure can be harmful to your skin.|They are removing harmful chemicals from the product.", "過度曝曬陽光對你的皮膚是有害的。|他們正在從產品中去除有害的化學物質。"],
+                ["contain", "包含 / 容納", "This box doesn't contain anything valuable.|I couldn't contain my excitement for the US trip.", "這個盒子裡沒裝任何有價值的東西。|我無法抑制（容納）我對美國之旅的興奮。"],
+                ["lanyards", "掛繩", "All staff members must wear their ID badges on lanyards.|I bought a cool lanyard for my keys.", "所有員工都必須用掛繩佩戴識別證。|我買了一條很酷的掛繩來掛鑰匙。"],
+                ["swipe card", "感應卡", "You need a swipe card to enter the building.|I think I lost my hotel swipe card.", "你需要感應卡才能進入這棟大樓。|我想我弄丟了飯店的感應卡（房卡）。"],
+                ["quotation", "報價單 / 語錄", "Please send me a formal quotation for the renovation.|He started his speech with a famous quotation.", "請寄給我一份正式的裝修報價單。|他用一句著名的語錄開始了他的演講。"],
+                ["apron", "圍裙", "The chef tied his apron before entering the kitchen.|She wore a floral apron while baking cookies.", "主廚在進廚房前繫上了圍裙。|她在烤餅乾時穿了一件碎花圍裙。"],
+                ["tough", "困難的 / 堅韌的", "It was a tough decision to make.|The steak was too tough to chew.", "這是一個困難的決定。|這牛排太韌了，咬不動。"],
+                ["upset", "難過的 / 打翻", "She was deeply upset by the bad news.|Be careful not to upset the glass of water.", "她因為這個壞消息感到非常難過。|小心別打翻了那杯水。"],
+                ["costume", "服裝 / 戲服", "We rented a pirate costume for the Halloween party.|The actors are wearing traditional costumes.", "我們為了萬聖節派對租了一套海盜服裝。|演員們穿著傳統戲服。"],
+                ["industry", "工業 / 產業", "The tourism industry is booming right now.|He works in the software industry.", "旅遊產業現在非常繁榮。|他在軟體產業工作。"],
+                ["stock", "庫存 / 股票", "We are currently out of stock for this item.|He invested a lot of money in the stock market.", "我們這項商品目前沒有庫存。|他在股票市場投資了很多錢。"],
+                ["energetic", "有活力的", "The tour guide was very energetic and fun.|I feel much more energetic after my workout.", "導遊非常有活力而且很有趣。|健身完後我覺得更有活力了。"],
+                ["first aid", "急救", "Do you know how to perform basic first aid?|There is a first aid kit in the back of the car.", "你知道如何進行基本的急救嗎？|車子後座有一個急救箱。"],
+                ["each other", "彼此", "The seven of us promised to help each other on the trip.|They haven't seen each other in years.", "我們七個人答應在旅途中要互相幫忙。|他們好幾年沒見到彼此了。"],
+                ["apparently", "表面上 / 顯然地", "Apparently, the flight is delayed for two hours.|He is apparently the best player on the team.", "顯然地，班機延誤了兩個小時。|他顯然是隊上最好的球員。"],
+                ["entrant", "參賽者 / 新加入者", "Every entrant in the marathon received a medal.|Our company is a new entrant in the Asian market.", "馬拉松的每一位參賽者都拿到了一面獎牌。|我們公司是亞洲市場的新加入者。"],
+                ["constant", "持續的 / 不斷的", "The machine makes a constant humming noise.|He is under constant pressure at work.", "這台機器發出持續的嗡嗡聲。|他在工作中承受著不斷的壓力。"],
+                ["undergone", "經歷過", "The old hotel has undergone massive renovations.|He has undergone three surgeries this year.", "這間老飯店經歷過大規模的翻新。|他今年已經經歷了三次手術。"],
+                ["spade", "鏟子", "He used a spade to dig a hole in the garden.|The Ace of Spades is the highest card.", "他用一把鏟子在花園裡挖了個洞。|黑桃A是最大的一張牌。"],
+                ["restriction", "限制", "Are there any luggage restrictions for this flight?|The government imposed a new speed restriction.", "這班飛機有任何行李限制嗎？|政府實施了新的速限。"],
+                ["dieting", "節食", "She is dieting because she wants to lose weight.|Extreme dieting can be harmful to your health.", "她在節食，因為她想減肥。|極端的節食可能對健康有害。"],
+                ["stressful", "有壓力的", "Planning a trip for seven people can be quite stressful.|He quit his highly stressful job last month.", "規劃七個人的旅行可能會滿有壓力的。|他上個月辭去了壓力極大的工作。"],
+                ["enrollment", "註冊 / 加入", "School enrollment has increased this year.|The open enrollment period starts next week.", "今年的學校註冊人數增加了。|開放報名（註冊）期間下週開始。"],
+                ["refund", "退款", "I would like to request a full refund for this ticket.|The store's policy does not allow cash refunds.", "我想要申請這張票的全額退款。|這家店的政策不允許現金退款。"],
+                ["emission", "排放", "The factory must reduce its carbon emission.|New cars have lower exhaust emissions.", "這家工廠必須減少其碳排放。|新車的廢氣排放量較低。"],
+                ["inclusion", "包括 / 包含", "The inclusion of breakfast in the hotel price is great.|We strive for diversity and inclusion in our office.", "飯店價格包含早餐，這真是太棒了。|我們致力於辦公室的多元與包容。"],
+                ["for instance", "例如", "Many cities, for instance New York, never sleep.|There are many benefits to exercise; for instance, better sleep.", "許多城市，例如紐約，是個不夜城。|運動有很多好處；例如，更好的睡眠品質。"],
+                ["in spite of", "儘管", "In spite of the rain, we went out for a walk.|He won the match in spite of his injury.", "儘管下雨，我們還是出去散步了。|儘管受傷，他還是贏得了比賽。"],
+                ["as for", "至於 / 關於", "As for me, I prefer coffee over tea.|As for the budget, we will discuss it tomorrow.", "至於我，我比較喜歡咖啡勝過茶。|關於預算，我們明天再討論。"],
+                ["now that", "既然 / 由於", "Now that we are here, let's take a photo.|Now that it's raining, we should stay indoors.", "既然我們都來了，就拍張照吧。|由於下雨了，我們應該待在室內。"],
+                ["discipline", "紀律 / 學科", "It takes strict discipline to work out every week.|Sociology is a fascinating academic discipline.", "每週健身需要嚴格的紀律。|社會學是一門迷人的學科。"],
+                ["format", "版式 / 格式", "The file format must be a PDF.|I don't like the new format of this TV show.", "檔案格式必須是 PDF。|我不喜歡這個電視節目的新版式（型態）。"],
+                ["stroll", "散步 / 閒逛", "We took a leisurely stroll along the beach.|Let's stroll around the park after dinner.", "我們沿著海灘悠閒地散步。|晚餐後我們去公園周圍閒逛一下吧。"],
+                ["recipients", "收件人", "Please enter the email addresses of the recipients.|The recipients of the scholarship will be announced soon.", "請輸入收件人的電子郵件地址。|獎學金的受獎人（收件人）很快就會公布。"],
+                ["simultaneously", "同時地", "The game will be broadcast simultaneously on TV and online.|Two flights arrived simultaneously.", "這場比賽將在電視和網路上同時播出。|兩架航班同時抵達了。"],
+                ["exception", "例外", "There is an exception to every rule.|With the exception of John, everyone was present.", "每個規則都有例外。|除了約翰（作為例外），每個人都出席了。"],
+                ["exceptionally", "非常地 / 異常地", "The weather has been exceptionally cold this winter.|She is an exceptionally talented designer.", "今年冬天的天氣異常寒冷。|她是一位非常有才華的設計師。"],
+                ["incidentally", "順便一提 / 偶然地", "Incidentally, do you know where the restroom is?|The discovery was made incidentally during a routine test.", "順便一提，你知道洗手間在哪裡嗎？|這個發現是在例行測試中偶然獲得的。"],
+                ["artificially", "人工地", "The room was artificially cooled by the AC.|These snacks are artificially flavored.", "這個房間由冷氣人工降溫。|這些零食是人工調味的。"],
+                ["sculptures", "雕塑品", "The museum has a beautiful collection of marble sculptures.|He makes metal sculptures from recycled materials.", "這間博物館收藏了美麗的大理石雕塑。|他用回收材料製作金屬雕塑。"],
+                ["outskirts", "郊區", "They live on the outskirts of Los Angeles.|We found a cheap motel on the outskirts of town.", "他們住在洛杉磯的郊區。|我們在小鎮郊區找到了一間便宜的汽車旅館。"],
+                ["catalog", "目錄", "You can order these items directly from our catalog.|The library has a huge digital catalog.", "你可以直接從我們的目錄訂購這些商品。|圖書館有著龐大的數位目錄。"],
+                ["malfunction", "故障", "A technical malfunction caused the train to stop.|If there is a malfunction, please press the emergency button.", "技術故障導致火車停駛。|如果發生故障，請按下緊急按鈕。"],
+                ["resume", "履歷表 / 重新開始", "Please send your resume to the HR department.|The game will resume after a short break.", "請將您的履歷表寄給人資部門。|比賽將在短暫休息後重新開始。"],
+                ["otherwise", "否則", "We need to leave now, otherwise we will miss the flight.|I'm busy today; otherwise, I would join you.", "我們現在必須離開，否則會錯過班機。|我今天很忙；否則我就會加入你們了。"],
+                ["identical", "完全相同的", "The two suitcases look completely identical.|They are wearing identical shirts.", "這兩個行李箱看起來完全一模一樣。|他們穿著完全相同的襯衫。"],
+                ["adventure", "冒險", "Our road trip across America was a great adventure.|Are you ready for your next adventure?", "我們橫跨美國的公路旅行是一場超棒的冒險。|你準備好迎接下一次的冒險了嗎？"],
+                ["advanced", "先進的 / 高階的", "This class is for students with advanced English skills.|The hospital uses advanced medical equipment.", "這堂課是為擁有高階英文能力的學生開設的。|這間醫院使用先進的醫療設備。"],
+                ["idealistic", "理想主義的", "When I was young, I was very idealistic.|His plan sounds good, but it's a bit too idealistic.", "當我年輕時，我非常理想主義。|他的計畫聽起來不錯，但有點太過理想化了。"],
+                ["critical", "批評的 / 關鍵的", "It is critical that we arrive at the airport on time.|The movie received critical praise.", "我們準時抵達機場是非常關鍵的。|這部電影受到了評論家（批評的）讚揚。"],
+                ["suitable", "適合的", "This movie is not suitable for children.|We need to find a suitable time for the meeting.", "這部電影不適合兒童觀看。|我們需要找個適合的時間開會。"],
+                ["naive", "天真的", "It was naive of me to trust him so easily.|Don't be so naive; nobody gives away free money.", "我這麼輕易就相信他真是太天真了。|別這麼天真；沒有人會白白送錢。"],
+                ["blacksmith", "鐵匠", "The blacksmith forged a new sword from the metal.|We visited an old blacksmith shop in the village.", "鐵匠用金屬鍛造了一把新劍。|我們參觀了村子裡一間古老的鐵匠鋪。"],
+                ["wheel chair", "輪椅", "The hotel requested a room accessible by wheel chair.|My grandmother uses a wheel chair to get around.", "這間飯店要求了一間輪椅可進入的無障礙房間。|我祖母坐輪椅代步。"],
+                ["suspect", "懷疑 / 嫌疑犯", "I suspect that we are going the wrong way.|The police have arrested a suspect in the robbery.", "我懷疑我們走錯路了。|警方逮捕了一名搶劫案的嫌疑犯。"],
+                ["appeal", "呼籲 / 吸引力", "This dark movie has a strong appeal to me.|The charity made an urgent appeal for donations.", "這部黑暗的電影對我有強烈的吸引力。|該慈善機構發出了緊急的捐款呼籲。"],
+                ["domestic", "國內的 / 家庭的", "Are we at the domestic or international terminal?|They focus on domestic tourism this year.", "我們現在是在國內航廈還是國際航廈？|他們今年的重點放在國內旅遊。"],
+                ["vintage", "經典的 / 復古的", "She loves shopping for vintage clothes in thrift stores.|He bought a vintage camera at the flea market.", "她喜歡在二手商店買復古衣物。|他在跳蚤市場買了一台經典的復古相機。"],
+                ["bite", "咬 / 一口", "I just need a quick bite before we head out.|Does your dog bite?", "我們出發前我只需要隨便吃一口東西。|你的狗會咬人嗎？"],
+                ["varies", "變化 / 差異", "The room price varies depending on the season.|The quality of the food varies from day to day.", "房價會根據季節有所變化。|這家店食物的品質每天都不太一樣。"],
+                ["inclusive", "包含的", "The resort package is all-inclusive.|We want to build a more inclusive society.", "這間度假村的套裝行程是全包式的（包含一切的）。|我們想建立一個更具包容性的社會。"],
+                ["sustainability", "永續性", "Environmental sustainability is our core value.|Many brands are now focusing on sustainability.", "環境永續性是我們的核心價值。|許多品牌現在都專注於永續發展。"],
+                ["reputation", "名聲", "That restaurant has a reputation for terrible service.|He has a solid reputation in the design industry.", "那家餐廳以服務極差而「聞名」（名聲不好）。|他在設計界有著良好的名聲。"],
+                ["instantly", "立即地", "I recognized her instantly when she walked in.|The pain disappeared almost instantly.", "她一走進來我立刻就認出她了。|疼痛幾乎立刻消失了。"],
+                ["value", "價值 / 重視", "This house has gone up in value.|I highly value your opinion on this design.", "這棟房子的價值上升了。|我非常重視你對這個設計的意見。"],
+                ["rude", "無禮的", "It is rude to point your finger at someone.|The waiter was very rude to us.", "用手指著別人是很無禮的。|那個服務生對我們非常無禮。"],
+                ["recent", "最近的", "Have you seen any good movies in recent weeks?|My recent trip to the US was amazing.", "你最近幾週有看什麼好電影嗎？|我最近的美國之旅棒極了。"],
+                ["antique", "古董的 / 古董", "My mother loves collecting antique furniture.|There is an antique shop at the corner.", "我媽媽喜歡收集古董家具。|轉角處有一間古董店。"],
+                ["suitcase", "行李箱", "I couldn't fit all my clothes in one suitcase.|Please make sure your suitcase is locked.", "我無法把所有的衣服塞進一個行李箱裡。|請確保你的行李箱上鎖了。"],
+                ["summit", "頂峰 / 高峰會", "It took us five hours to reach the mountain summit.|The leaders met at the global summit.", "我們花了五個小時才抵達山頂（頂峰）。|各國領袖在全球高峰會上會面。"],
+                ["scene", "場景", "The opening scene of the movie is spectacular.|The police arrived at the crime scene.", "這部電影的開場場景非常壯觀。|警方抵達了犯罪現場。"],
+                ["simplifying", "簡化", "We are simplifying the checkout process for our app.|Simplifying your life can reduce stress.", "我們正在簡化我們 App 的結帳流程。|簡化你的生活可以減少壓力。"],
+                ["funeral", "葬禮", "He wore a black suit to the funeral.|The funeral will be held tomorrow morning.", "他穿著黑色西裝參加葬禮。|葬禮將於明天上午舉行。"],
+                ["leisure", "休閒", "What do you like to do in your leisure time?|We walked along the beach at our leisure.", "你在休閒時間喜歡做什麼？|我們悠閒地沿著海灘散步。"],
+                ["navigate", "導航", "I'll drive, and you can navigate using Google Maps.|It's hard to navigate this huge airport.", "我來開車，你可以用 Google 地圖導航。|要在這個巨大的機場裡導航（找路）很困難。"],
+                ["faucet", "水龍頭", "Please turn off the faucet while brushing your teeth.|The bathroom faucet is leaking again.", "刷牙時請關掉水龍頭。|浴室的水龍頭又漏水了。"],
+                ["minor", "次要的 / 輕微的", "It's just a minor problem; don't worry.|He suffered only minor injuries in the crash.", "這只是一個小問題；別擔心。|他在車禍中只受了輕傷。"],
+                ["promptly", "迅速地 / 準時地", "The meeting will start promptly at 9 AM.|Please reply to this email promptly.", "會議將在早上九點準時開始。|請迅速回覆這封電子郵件。"],
+                ["due to", "由於", "The flight was delayed due to heavy fog.|His success is due to his hard work.", "由於濃霧，航班延誤了。|他的成功歸功於（由於）他的努力工作。"],
+                ["giant", "巨大的 / 巨人", "We saw a giant billboard on the highway.|The story is about a friendly giant.", "我們在高速公路上看到了一個巨大的廣告看板。|這個故事是關於一個友善的巨人。"],
+                ["recipe", "食譜", "Can you give me the recipe for this cake?|Hard work is the recipe for success.", "你能把這個蛋糕的食譜給我嗎？|努力工作是成功的秘訣（食譜）。"],
+                ["reluctant", "不情願的", "She was reluctant to leave her cozy bed.|I am reluctant to spend that much money.", "她很不情願離開她舒適的床。|我很不情願花那麼多錢。"],
+                ["dismayed", "感到沮喪的", "We were dismayed by the poor service at the hotel.|He was deeply dismayed when he failed the test.", "我們對飯店糟糕的服務感到很沮喪。|當他考試不及格時，他感到深深的沮喪。"],
+                ["metropolitan", "大都會的", "Taipei is a bustling metropolitan area.|We visited the Metropolitan Museum of Art.", "台北是一個繁華的大都會地區。|我們參觀了大都會藝術博物館。"],
+                ["components", "成分 / 零件", "He bought some electronic components for his project.|Trust and respect are key components of a good team.", "他為他的專案買了一些電子零件。|信任和尊重是好團隊的關鍵成分。"],
+                ["throughout", "自始至終 / 遍及", "It rained heavily throughout the night.|The brand is famous throughout the world.", "昨晚徹夜（自始至終）下著大雨。|這個品牌舉世（遍及世界）聞名。"],
+                ["reach", "到達 / 達成", "We finally reached the hotel after a 10-hour drive.|They failed to reach an agreement.", "開了 10 小時的車後，我們終於到達了飯店。|他們未能達成協議。"],
+                ["sense", "感覺 / 意義", "He has a great sense of humor.|This sentence doesn't make any sense.", "他有很好的幽默感。|這個句子毫無意義（說不通）。"],
+                ["measure", "測量 / 措施", "We need to measure the dimensions of the living room.|The government took strict measures to control the virus.", "我們需要測量客廳的尺寸。|政府採取了嚴格的措施來控制病毒。"],
+                ["accidentally", "意外地 / 不小心地", "I accidentally deleted the important file.|He accidentally spilled coffee on his shirt.", "我不小心刪除了重要的檔案。|他意外地把咖啡灑在了襯衫上。"],
+                ["mandatory", "強制的 / 必須的", "Wearing a seatbelt is mandatory by law.|Attendance at the team meeting is mandatory.", "法律強制規定必須繫安全帶。|團隊會議是強制出席的。"],
+                ["submit", "提交 / 屈服", "You must submit your application before Friday.|He refused to submit to their demands.", "你必須在週五前提交申請。|他拒絕屈服於他們的要求。"],
+                ["remarkably", "非常地 / 顯著地", "She played the piano remarkably well.|The two brothers look remarkably similar.", "她鋼琴彈得非常好（顯著地好）。|這對兄弟長得非常相似。"],
+                ["rigid", "堅硬的 / 死板的", "He has a very rigid daily schedule.|The school's rules are too rigid.", "他有著非常死板的每日行程。|這所學校的規定太死板了。"],
+                ["present", "目前的 / 出席的 / 禮物", "Who is the present manager of this department?|Everyone was present at the meeting.", "這個部門目前的經理是誰？|每個人都出席了會議。"],
+                ["humor", "幽默", "His dark sense of humor is not for everyone.|She handled the awkward situation with humor.", "他的黑色幽默不是每個人都懂。|她用幽默化解了尷尬的局面。"],
+                ["prompt", "迅速的 / 提示", "Thank you for your prompt reply.|He is always prompt in paying his bills.", "感謝您迅速的回覆。|他付帳單總是十分迅速。"],
+                ["rate", "比率 / 費用 / 評價", "What is the current exchange rate for US dollars?|The hotel room rate is $150 per night.", "目前美元的匯率（比率）是多少？|飯店房價（費用）是每晚 150 美元。"],
+                ["amount", "數量 / 金額", "A huge amount of money was spent on the trip.|Please transfer the exact amount to this account.", "這趟旅行花費了龐大數量的金錢。|請將確切金額轉帳至此帳戶。"],
+                ["assignment", "作業 / 任務", "The teacher gave us a difficult writing assignment.|He is on a special assignment in London.", "老師給了我們一項困難的寫作作業。|他正在倫敦執行一項特殊任務。"],
+                ["wage", "工資", "The minimum wage has been increased this year.|Many workers are demanding a higher living wage.", "今年的基本工資調漲了。|許多工人要求提高能維持生活的工資。"],
+                ["profit", "利潤", "The company made a huge profit last quarter.|He sold his car at a profit.", "這家公司上個季度獲得了巨大的利潤。|他賣掉車子賺取了利潤。"],
+                ["associate", "聯想 / 同事", "I always associate rainy days with sleeping in.|She is a senior associate at the law firm.", "我總是把下雨天和睡懶覺聯想在一起。|她是這家律師事務所的資深合夥人（同事）。"],
+                ["finance", "財務 / 金融", "He works in the finance department of a bank.|She is studying finance at the university.", "他在一家銀行的財務部門工作。|她正在大學主修金融。"],
+                ["after all", "畢竟", "Don't be too hard on him; he is just a beginner after all.|We decided to go to the party after all.", "別對他太苛刻；他畢竟只是個初學者。|我們畢竟（最終還是）決定去參加派對了。"],
+                ["as long as", "只要", "You can stay here as long as you want.|I will go with you, as long as you drive.", "你想待多久就可以待多久（只要你喜歡）。|我會跟你去，只要你開車。"],
+                ["emphasis", "強調 / 重點", "The school places a strong emphasis on physical education.|In this word, the emphasis is on the first syllable.", "這所學校非常強調體育。|在這個單字中，重音（強調）在第一個音節。"],
+                ["disposal", "處理 / 清除", "Proper waste disposal is important for the environment.|I am at your disposal if you need any help.", "適當的廢棄物處理對環境很重要。|如果你需要任何幫助，我任憑你差遣（由你處置）。"],
+                ["diverse", "多樣的", "New York is a culturally diverse city.|Our team has a diverse range of skills.", "紐約是一個文化多樣的城市。|我們的團隊擁有多樣化的技能。"],
+                ["broader", "更寬廣的", "Traveling gives you a broader perspective on life.|We need to look at the broader picture.", "旅行能給你更寬廣的人生視角。|我們需要著眼於更宏觀（寬廣）的局面。"],
+                ["enthusiasm", "熱情", "He showed a lot of enthusiasm for the new project.|She tackled the problem with great enthusiasm.", "他對這個新專案展現了高度的熱情。|她以極大的熱情解決了這個問題。"],
+                ["promise", "承諾", "I promise I will call you when I arrive.|Don't make a promise you can't keep.", "我承諾我抵達時會打給你。|不要許下你無法遵守的承諾。"],
+                ["spread", "散佈 / 塗抹", "The news spread quickly across the internet.|I like to spread butter on my toast.", "這個消息在網路上迅速散佈開來。|我喜歡在吐司上塗抹奶油。"],
+                ["frustrated", "感到沮喪的", "I am so frustrated with this slow internet.|She felt frustrated when she couldn't solve the puzzle.", "我對這緩慢的網路感到非常沮喪（受挫）。|當她無法解開謎題時，她感到很挫折。"],
+                ["approach", "接近 / 方法", "The train will soon approach the station.|We need a new approach to solve this issue.", "火車即將接近車站。|我們需要一個新方法來解決這個問題。"],
+                ["consider", "考慮", "Please consider my offer carefully.|We didn't consider the traffic when planning the trip.", "請仔細考慮我的提議。|我們在規劃行程時沒有把交通狀況考慮進去。"],
+                ["expand", "擴大", "The company plans to expand its business into Europe.|Reading helps to expand your vocabulary.", "這家公司計畫將業務擴大到歐洲。|閱讀有助於擴大你的字彙量。"],
+                ["extend", "延長", "We decided to extend our vacation by three days.|Can you extend the deadline for this project?", "我們決定將假期延長三天。|你能延長這個專案的截止日期嗎？"],
+                ["fill out", "填寫", "Please fill out this form at the reception desk.|It took me ten minutes to fill out the application.", "請在接待台填寫這份表格。|我花了十分鐘才填好這份申請表。"],
+                ["equipped", "配備了...的", "Our hotel room is fully equipped with a kitchen.|He is well equipped to handle this emergency.", "我們的飯店房間配備了完整的廚房。|他具備了處理這個緊急情況的能力（裝備齊全）。"],
+                ["native", "本地的 / 原住民", "He is a native speaker of English.|The kangaroo is native to Australia.", "他是英語的母語（本地）人士。|袋鼠是澳洲的特有（本地）動物。"],
+                ["thrilled", "非常興奮的", "I was thrilled to win the first prize.|We are thrilled about our upcoming trip to America.", "我對於贏得第一名感到非常興奮。|我們對即將到來的美國之旅感到非常興奮。"],
+                ["audience", "觀眾", "The audience clapped loudly at the end of the show.|This movie targets a younger audience.", "表演結束時，觀眾大聲鼓掌。|這部電影鎖定較年輕的觀眾群。"],
+                ["exquisite", "精緻的", "She wore an exquisite necklace to the party.|The food at that restaurant was simply exquisite.", "她戴著一條精緻的項鍊參加派對。|那家餐廳的食物簡直是太精緻了。"],
+                ["fictional", "虛構的", "Sherlock Holmes is a fictional character.|The story takes place in a fictional city.", "夏洛克·福爾摩斯是一個虛構的角色。|故事發生在一個虛構的城市裡。"],
+                ["delighted", "感到高興的", "I am delighted to meet you.|We were delighted by the surprise upgrade to a suite.", "我很高興認識你。|我們對驚喜升等套房感到非常高興。"],
+                ["ordinary", "普通的", "Today was just an ordinary day at work.|He looks like a completely ordinary guy.", "今天只是個平凡的上班日。|他看起來就像個完全普通的傢伙。"],
+                ["trend", "趨勢", "Remote working has become a major trend.|She always follows the latest fashion trends.", "遠距工作已經成為一個主要趨勢。|她總是跟隨最新的時尚趨勢。"],
+                ["vacancy", "空缺 / 空房", "We have a job vacancy in the marketing department.|The hotel sign said 'No Vacancy'.", "我們行銷部門有一個職位空缺。|飯店的告示牌寫著「客滿（沒有空房）」。"],
+                ["illness", "疾病", "He missed a week of school due to severe illness.|Stress can often lead to physical illness.", "他因為嚴重的疾病缺席了一週的課。|壓力經常會導致身體疾病。"],
+                ["engage", "參與 / 互動", "It is important to engage with your customers online.|He tried to engage her in a conversation.", "在網路上與你的顧客互動是很重要的。|他試圖讓她參與對話。"],
+                ["distinct", "明顯的 / 清楚的", "There is a distinct smell of gas in the kitchen.|Those two ideas are quite distinct from each other.", "廚房裡有一股明顯的瓦斯味。|那兩個想法彼此非常不同（清楚區分）。"],
+                ["investigate", "調查", "The police will investigate the cause of the fire.|We need to investigate why the app crashed.", "警方將調查起火原因。|我們需要調查 App 崩潰的原因。"],
+                ["demonstrate", "示範 / 證明", "The chef will demonstrate how to cook the steak.|This study demonstrates the benefits of daily exercise.", "主廚將示範如何烹調牛排。|這項研究證明了每日運動的好處。"],
+                ["record", "記錄", "Please keep a record of all your expenses during the trip.|He holds the world record for the 100-meter dash.", "請記錄你在旅途中的所有花費。|他保持著 100 公尺短跑的世界紀錄。"],
+                ["perspective", "觀點", "From my perspective, this is a bad idea.|Traveling gives you a new perspective on the world.", "從我的觀點來看，這是個壞主意。|旅行能給你對世界全新的觀點。"],
+                ["conduct", "進行 / 行為", "The company will conduct a survey to gather feedback.|His professional conduct was highly praised.", "公司將進行一項問卷調查來收集回饋。|他的專業行為受到了高度讚揚。"],
+                ["precise", "精確的", "I need the precise measurements of the room.|She gave me precise instructions on how to get there.", "我需要這個房間精確的測量尺寸。|她給了我如何到達那裡的精確指示。"],
+                ["negotiate", "談判 / 協商", "We had to negotiate the price of the used car.|The two countries failed to negotiate a peace treaty.", "我們不得不針對那輛二手車的價格進行協商。|兩國未能談判出和平條約。"],
+                ["evaluate", "評估", "The teacher will evaluate the students' performance.|We need to evaluate all the options before making a decision.", "老師將評估學生們的表現。|在做決定之前，我們需要評估所有的選項。"],
+                ["outstanding", "傑出的 / 未付的", "She received an award for her outstanding performance.|I still have an outstanding balance on my credit card.", "她因為傑出的表現而獲獎。|我的信用卡上還有一筆未付的餘額。"],
+                ["defective", "有瑕疵的", "I returned the TV because it was defective.|The company recalled the defective products.", "我把電視退貨了，因為它有瑕疵。|公司召回了這些有瑕疵的產品。"],
+                ["reception", "接待會 / 收訊", "We attended the wedding reception last night.|The cell phone reception in this area is terrible.", "我們昨晚參加了婚禮的接待酒會。|這個地區的手機收訊極差。"],
+                ["authentic", "真實的 / 道地的", "We ate at an authentic Mexican restaurant in California.|Are you sure this designer bag is authentic?", "我們在加州吃了一間道地的墨西哥餐廳。|你確定這個名牌包是真的嗎？"],
+                ["inquire", "詢問", "I called the hotel to inquire about their room rates.|He inquired if there were any available tickets.", "我打電話到飯店詢問他們的房價。|他詢問是否還有可用的票。"],
+                ["accomplishment", "成就", "Finishing the marathon was a great accomplishment for him.|We celebrated the team's amazing accomplishment.", "跑完馬拉松對他來說是一項偉大的成就。|我們慶祝了團隊驚人的成就。"],
+                ["eligible", "有資格的", "You are eligible for a discount if you show your student ID.|Employees are eligible for a bonus after one year.", "出示學生證你就有資格獲得折扣。|員工滿一年後即有資格領取獎金。"],
+                ["terminate", "終止", "The company decided to terminate his contract early.|Please terminate the program if it freezes.", "公司決定提早終止他的合約。|如果程式當機，請終止它。"],
+                ["expired", "過期的", "I couldn't travel because my passport had expired.|Don't drink that milk; it is expired.", "我無法出國，因為我的護照過期了。|別喝那個牛奶；它過期了。"],
+                ["innovative", "創新的", "Apple is known for its innovative technology.|We need an innovative solution to this problem.", "蘋果以其創新的科技聞名。|我們需要一個創新的解決方案來處理這個問題。"],
+                ["response", "回應", "I am still waiting for his response to my email.|The quick response of the firefighters saved the house.", "我還在等他對我電子郵件的回應。|消防員迅速的反應拯救了那棟房子。"],
+                ["valid", "有效的", "You need a valid ticket to enter the concert.|His argument was valid and made a lot of sense.", "你需要一張有效的票才能進入演唱會。|他的論點很有效，而且非常有道理。"],
+                ["sensitive", "敏感的", "My teeth are very sensitive to cold water.|This document contains highly sensitive information.", "我的牙齒對冷水非常敏感。|這份文件包含高度機密（敏感）的資訊。"],
+                ["proper", "適當的", "Please use the proper tools for the job.|It is not proper to wear a hat in the classroom.", "請使用適當的工具來完成這項工作。|在教室裡戴帽子是不適當的。"],
+                ["dramatic", "戲劇性的", "There has been a dramatic increase in sales this month.|The movie had a very dramatic ending.", "這個月的銷售量有了戲劇性的成長。|這部電影有一個非常戲劇性的結局。"],
+                ["rapidly", "迅速地", "The technology industry is changing rapidly.|The fire spread rapidly through the dry forest.", "科技產業正在迅速改變。|大火在乾燥的森林中迅速蔓延。"],
+                ["limit", "限制", "There is a strict weight limit for cabin luggage.|We need to limit our spending on this trip.", "手提行李有嚴格的重量限制。|我們必須限制這趟旅行的花費。"],
+                ["entire", "全部的", "We ate the entire pizza by ourselves.|He spent his entire life in this small town.", "我們自己把整片披薩都吃光了。|他一輩子（全部的生命）都待在這個小鎮。"],
+                ["instruction", "指示", "Please read the instruction manual carefully before use.|I followed your instructions exactly.", "使用前請仔細閱讀指示手冊。|我完全按照你的指示去做。"],
+                ["portable", "可攜帶的", "I bought a portable charger for my phone.|He uses a portable heater in his office during winter.", "我為我的手機買了一個行動電源（可攜帶充電器）。|他冬天在辦公室用一台可攜帶式的暖氣機。"],
+                ["outcome", "結果", "What was the final outcome of the negotiation?|We are very satisfied with the outcome of the project.", "談判的最終結果是什麼？|我們對這個專案的結果非常滿意。"],
+                ["prior to", "在...之前", "Please arrive at the airport two hours prior to departure.|He worked as a teacher prior to joining our company.", "請在出發前兩小時抵達機場。|在加入我們公司之前，他是一名老師。"],
+                ["diligently", "勤奮地", "He worked diligently to finish the project on time.|She has been studying English diligently for months.", "他勤奮地工作以準時完成專案。|幾個月來她一直勤奮地學習英文。"],
+                ["affordable", "負擔得起的", "We found a very affordable Airbnb for our group of seven.|This brand offers stylish but affordable clothing.", "我們為我們七個人找到了一間非常平價（負擔得起）的 Airbnb。|這個品牌提供時尚但平價的服飾。"],
+                ["steady", "穩定的", "The company has seen steady growth over the last five years.|You need a steady hand to paint those small details.", "這家公司在過去五年中看到了穩定的成長。|你需要一雙穩定的手來畫那些小細節。"],
+                ["thoughtful", "體貼的", "It was very thoughtful of you to bring me coffee.|He gave me a thoughtful gift for my birthday.", "你帶咖啡給我真是太體貼了。|他送了我一份很用心的（體貼的）生日禮物。"],
+                ["influence", "影響", "His speech had a great influence on my decision.|Do not drive under the influence of alcohol.", "他的演講對我的決定有很大的影響。|酒後請勿駕車（在酒精影響下）。"],
+                ["tangible", "有形的 / 實體的", "We need tangible evidence, not just rumors.|The company offers tangible benefits to its employees.", "我們需要具體的（有形的）證據，而不只是謠言。|這家公司為員工提供實質的福利。"],
+                ["narrow", "狹窄的", "The mountain road was very narrow and dangerous.|He won the election by a narrow margin.", "這條山路非常狹窄且危險。|他以微弱的（狹窄的）差距贏得了選舉。"],
+                ["situation", "情況 / 處境", "We are dealing with a very difficult situation right now.|I don't know how I would react in that situation.", "我們現在正在處理一個非常困難的情況。|我不知道在那種情況下我會作何反應。"],
+                ["restore", "恢復", "The team worked hard to restore power after the storm.|It took months to restore the antique furniture.", "風暴過後，團隊努力恢復電力。|花了好幾個月才修復（恢復）那件古董家具。"],
+                ["pricing", "定價", "Their aggressive pricing strategy helped them win the market.|We are reviewing our pricing for next year.", "他們積極的定價策略幫助他們贏得了市場。|我們正在審查明年的定價。"],
+                ["massive", "巨大的", "The explosion caused massive damage to the building.|He has a massive collection of comic books.", "爆炸對建築物造成了巨大的損害。|他收藏了大量的（巨大的）漫畫書。"],
+                ["decrease", "減少", "There has been a decrease in traffic accidents this year.|We need to decrease our daily expenses.", "今年的交通事故有所減少。|我們需要減少日常開支。"],
+                ["negotiation", "談判", "The contract is currently under negotiation.|He is skilled in business negotiation.", "合約目前正在談判中。|他精通商業談判。"],
+                ["compatible", "相容的", "This software is not compatible with older computers.|Are these two devices compatible with each other?", "這個軟體與舊電腦不相容。|這兩個設備彼此相容嗎？"],
+                ["sufficient", "足夠的", "We have sufficient food for the entire trip.|Her explanation was not sufficient to convince me.", "我們有足夠的食物應付整趟旅行。|她的解釋不足以說服我。"],
+                ["affect", "影響", "Lack of sleep can strongly affect your mood.|Will the rain affect our outdoor plans?", "睡眠不足會強烈影響你的心情。|下雨會影響我們的戶外計畫嗎？"],
+                ["inspire", "激勵", "His story of overcoming difficulties inspired everyone.|The beautiful scenery inspired her to write a poem.", "他克服困難的故事激勵了所有人。|美麗的風景激發了她寫詩的靈感。"],
+                ["transformative", "徹底改觀的", "Traveling alone can be a transformative experience.|The new technology had a transformative impact on the industry.", "獨自旅行可能是一次改變人生的（徹底改觀的）體驗。|新科技對該產業產生了革命性的影響。"],
+                ["exact", "精確的 / 確切的", "What is the exact time of your arrival?|These are his exact words.", "你確切的抵達時間是什麼時候？|這些是他原原本本的話（精確的用詞）。"],
+                ["debate", "辯論", "They had a long debate about politics.|The topic is currently under debate in the parliament.", "他們針對政治進行了長時間的辯論。|這個話題目前正在議會中辯論。"],
+                ["overcome", "克服", "She had to overcome many obstacles to reach her goal.|He finally overcame his fear of flying.", "她必須克服許多障礙才能達到目標。|他終於克服了對飛行的恐懼。"],
+                ["adapt", "適應", "When you travel, you have to adapt to new cultures.|It is hard to adapt to the cold weather here.", "旅行時，你必須適應新的文化。|很難適應這裡寒冷的天氣。"],
+                ["vital", "極其重要的", "Water is vital for all living things.|It is vital that you read this document before signing.", "水對所有生物都是極其重要的。|在簽字前閱讀這份文件是至關重要的。"],
+                ["severe", "嚴重的", "The severe storm canceled all flights.|He suffers from severe back pain.", "嚴重的風暴導致所有航班取消。|他患有嚴重的背痛。"],
+                ["exceed", "超過", "Your luggage must not exceed 23 kilograms.|The final cost exceeded our initial budget.", "你的行李不得超過 23 公斤。|最終花費超過了我們最初的預算。"],
+                ["convince", "說服", "I tried to convince him to join our gym.|She convinced me that it was a good idea.", "我試圖說服他加入我們的健身房。|她說服我這是一個好主意。"],
+                ["declare", "宣布", "The government declared a state of emergency.|Do you have anything to declare at customs?", "政府宣布進入緊急狀態。|在海關你有什麼東西需要申報（宣布）嗎？"],
+                ["unlike", "不像 / 不同的", "Unlike his brother, he is very outgoing.|This new model is quite unlike the previous one.", "不像他的兄弟，他非常外向。|這款新機型與之前的非常不同。"],
+                ["endure", "忍受", "I cannot endure this loud noise anymore.|The marathon runners had to endure extreme heat.", "我無法再忍受這種巨大的噪音了。|馬拉松跑者必須忍受極度的高溫。"],
+                ["expect", "期待 / 預計", "What time do you expect to arrive?|I didn't expect the movie to be this good.", "你預計幾點抵達？|我沒料到這部電影這麼好看。"],
+                ["reward", "報酬 / 獎賞", "He received a financial reward for his hard work.|The dog gets a treat as a reward for good behavior.", "他因為辛勤工作獲得了金錢報酬。|這隻狗因為表現好而得到了零食作為獎勵。"],
+                ["valuable", "有價值的", "This old watch is very valuable to me.|He learned a valuable lesson from his mistake.", "這隻舊手錶對我來說非常有價值。|他從錯誤中學到了寶貴的一課。"],
+                ["attitude", "態度", "She has a very positive attitude toward life.|You need to change your bad attitude.", "她對生活有非常積極的態度。|你需要改變你惡劣的態度。"],
+                ["urge", "催促 / 強烈欲望", "The teacher urged the students to study harder.|I felt a sudden urge to eat chocolate.", "老師催促學生們更用功讀書。|我突然有一股強烈想吃巧克力的衝動。"],
+                ["passionate", "熱情的", "He is very passionate about playing baseball.|She gave a passionate speech at the wedding.", "他對打棒球非常充滿熱情。|她在婚禮上發表了熱情的演說。"],
+                ["regret", "後悔", "I regret not learning English when I was younger.|We regret to inform you that the flight is canceled.", "我後悔年輕時沒有學好英文。|我們很遺憾（後悔）地通知您航班取消了。"],
+                ["exclusive", "獨有的 / 獨家的", "This VIP lounge is for exclusive use of our club members.|The reporter got an exclusive interview with the star.", "這個 VIP 休息室是我們俱樂部會員獨家使用的。|這位記者獲得了該明星的獨家專訪。"],
+                ["conscious", "有意識的", "I am conscious of the risks involved in this project.|He was severely injured but remained conscious.", "我意識到了這個專案所涉及的風險。|他受了重傷但仍保持清醒（有意識的）。"],
+                ["absorb", "吸收", "Sponges absorb a lot of water.|It's hard to absorb so much information in one day.", "海綿能吸收很多水。|很難在一天內吸收這麼多資訊。"],
+                ["admit", "承認", "I have to admit that I was wrong.|The ticket admits two people to the museum.", "我必須承認我錯了。|這張票允許（承認）兩人進入博物館。"],
+                ["express", "表達 / 快速的", "I would like to express my gratitude for your help.|We took the express train to the airport.", "我想對你的幫助表達我的感激之情。|我們搭乘了直達（快速的）列車前往機場。"],
+                ["determine", "決定", "Your budget will determine which hotel we can book.|The police are trying to determine the cause of the accident.", "你的預算將決定我們可以訂哪間飯店。|警方正試圖確定（決定）事故的原因。"],
+                ["essential", "必要的 / 不可或缺的", "A good passport is essential for international travel.|Water is essential for human life.", "一本好的護照是國際旅行所必需的。|水對人類生命是不可或缺的。"],
+                ["interactive", "互動的", "The museum has many interactive exhibits for children.|We enjoyed the interactive workshop.", "這間博物館有許多適合兒童的互動展覽。|我們很享受那個互動式的工作坊。"],
+                ["permanent", "永久的", "She is looking for a permanent job, not a temporary one.|I got a permanent marker to label the boxes.", "她在找一份永久的工作，而不是暫時的。|我拿了一支奇異筆（永久性麥克筆）來標記箱子。"]
             ];
 
-            const PERMANENT_WORDS = RAW_MASSIVE_DB.map(item => ({
+            const PERMANENT_WORDS = COMPRESSED_DB.map(item => ({
                 word: item[0],
-                phonetic: "",
+                phonetic: "", // 如果想要音標，可以點擊編輯自己加
                 chinese: item[1],
-                examples: [],
-                chinese_ex: []
+                examples: item[2] ? item[2].split('|') : [],
+                chinese_ex: item[3] ? item[3].split('|') : []
             }));
 
-            // 寫入完美示範例句
-            PERMANENT_WORDS[0].examples = ["The office relocation will happen next month.", "Please pack your belongings for the office relocation.", "Our office relocation was delayed by a week.", "The company hired experts for the office relocation.", "After the office relocation, we will have a bigger space."];
-            PERMANENT_WORDS[0].chinese_ex = ["辦公室搬遷將在下個月進行。", "請為辦公室搬遷打包您的私人物品。", "我們的辦公室搬遷延遲了一週。", "公司聘請了專家來進行辦公室搬遷。", "辦公室搬遷後，我們將擁有更大的空間。"];
-            PERMANENT_WORDS[1].examples = ["Please leave your keys at the reception desk.", "The receptionist is not at the reception desk right now.", "You can find a map at the reception desk.", "Please sign in at the reception desk when you arrive.", "The reception desk is located in the main lobby."];
-            PERMANENT_WORDS[1].chinese_ex = ["請將您的鑰匙留在接待台。", "接待員現在不在接待台。", "您可以在接待台找到地圖。", "抵達時請在接待台簽到。", "接待台位於主大廳。"];
-            PERMANENT_WORDS[2].examples = ["They are the leading supplier of electronic parts.", "We partnered with a leading supplier to ensure quality.", "As a leading supplier, they offer competitive prices.", "The company aims to become the leading supplier in Asia.", "Our leading supplier just launched a new product line."];
-            PERMANENT_WORDS[2].chinese_ex = ["他們是電子零件的主要供應商。", "我們與一家主要供應商合作以確保品質。", "作為主要供應商，他們提供具競爭力的價格。", "該公司致力於成為亞洲的主要供應商。", "我們的主要供應商剛推出了一條新產品線。"];
-            PERMANENT_WORDS[3].examples = ["The intended listener for this podcast is young adults.", "Always keep your intended listener in mind when writing.", "The joke was not understood by the intended listener.", "The message failed to reach the intended listener.", "Adjust your tone to suit your intended listener."];
-            PERMANENT_WORDS[3].chinese_ex = ["這個 Podcast 的目標聽眾是年輕人。", "寫作時要隨時將目標聽眾銘記在心。", "目標聽眾並沒有聽懂這個笑話。", "這個訊息沒有傳達到目標聽眾那裡。", "調整你的語氣以適合你的目標聽眾。"];
-            PERMANENT_WORDS[4].examples = ["The doctor is available for a consultation.", "We offer a free initial consultation for new clients.", "The project was delayed pending further consultation.", "He went to the clinic for a private consultation.", "After a brief consultation, they agreed on the plan."];
-            PERMANENT_WORDS[4].chinese_ex = ["醫生現在可以提供諮詢。", "我們為新客戶提供免費的初步諮詢。", "由於需要進一步諮詢，該專案被延遲了。", "他去診所進行了私人諮詢。", "經過短暫的諮詢後，他們對計劃達成了共識。"];
+            // 為了避免一次塞太多佔據版面，我先為你精選了這近 100 個最常考、最實用的單字放入永久字庫！
+            // 如果你還有其他字想加，現在你可以使用介面上的「一鍵獲取」功能直接從網路抓取，
+            // 或是用「編輯」按鈕手動輸入！
 
-            // 鈦合金升級：使用 Vue.createApp 直接建立，不怕 ReferenceError
             const app = Vue.createApp({
                 data() {
                     return {
@@ -242,10 +487,10 @@
                     }
                 },
                 mounted() {
-                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v7') || 'null');
+                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v8') || 'null');
                     if (!localData || localData.length === 0) {
                         this.wordBank = JSON.parse(JSON.stringify(PERMANENT_WORDS));
-                        localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
+                        localStorage.setItem('myFlashcards_v8', JSON.stringify(this.wordBank));
                     } else {
                         this.wordBank = localData;
                     }
@@ -283,7 +528,7 @@
                                 chinese: zhWord, examples: rawExs, chinese_ex: zhExs
                             };
                             this.wordBank.unshift(newWord);
-                            localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v8', JSON.stringify(this.wordBank));
                             this.searchQuery = '';
                         } catch (e) {
                             alert("❌ 查無此字！請善用『編輯』功能手動新增喔！");
@@ -293,7 +538,7 @@
                     removeFromBank(index) {
                         if(confirm("確定要刪除這個單字嗎？")) {
                             this.wordBank.splice(index, 1);
-                            localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v8', JSON.stringify(this.wordBank));
                         }
                     },
                     openEditModal(index) {
@@ -308,7 +553,7 @@
                     saveEdit() {
                         if (!this.editData.word.trim()) { alert("英文單字不能為空白！"); return; }
                         this.wordBank[this.editingIndex] = JSON.parse(JSON.stringify(this.editData));
-                        localStorage.setItem('myFlashcards_v7', JSON.stringify(this.wordBank));
+                        localStorage.setItem('myFlashcards_v8', JSON.stringify(this.wordBank));
                         this.closeEditModal();
                     },
                     addExample() {
