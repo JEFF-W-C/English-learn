@@ -1,6 +1,7 @@
 // 這是你的專屬單字資料庫 (words.js)
 // 格式：["英文單字", "中文", "英文例句1|英文例句2", "中文例句1|中文例句2"],
 
+
 const COMPRESSED_DB = [
     ["office relocation", "辦公室搬遷", "The office relocation will be completed by next Monday.|We need to pack our desks before the office relocation.", "辦公室搬遷將在下週一前完成。|我們需要在辦公室搬遷前打包好桌面。"],
     ["reception desk", "接待台", "Please leave the room keys at the reception desk.|Our group of seven gathered at the reception desk.", "請將房間鑰匙留在接待台。|我們七個人在接待台集合。"],
