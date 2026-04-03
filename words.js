@@ -202,7 +202,7 @@ const COMPRESSED_DB = [
     ["uncover", "揭露", "The journalist tried to uncover the truth.|They uncovered a hidden treasure in the cave.", "記者試圖揭露真相。|他們在洞穴中發現（揭開）了隱藏的寶藏。"],
     ["depicting", "描繪", "The painting is depicting a beautiful sunset.|The movie is depicting the life of a famous artist.", "這幅畫描繪著美麗的夕陽。|這部電影描繪了一位著名藝術家的一生。"],
     ["intake form", "入學表格 / 初診表格", "Please fill out this intake form before seeing the doctor.|New students must submit an intake form.", "看醫生前請先填寫這份初診表格（收件表）。|新生必須提交一份入學表格。"],
-    ["commitment", "承諾 / 保證", "We made a commitment to finish the project on time.|Marriage is a lifelong commitment.", "我們承諾會準時完成專案。|婚姻是一輩子的承諾。"]
+    ["commitment", "承諾 / 保證", "We made a commitment to finish the project on time.|Marriage is a lifelong commitment.", "我們承諾會準時完成專案。|婚姻是一輩子的承諾。"],
     ["rectified", "糾正", "The error in the report was quickly rectified.|Please ensure this mistake is rectified before tomorrow.", "報告中的錯誤很快就被糾正了。|請確保這個錯誤在明天之前被糾正。"],
     ["glitch", "小故障 / 小毛病", "There was a minor glitch in the booking system.|My phone is experiencing a weird software glitch.", "訂票系統出現了一個小故障。|我的手機遇到了一個奇怪的軟體小毛病。"],
     ["minor", "次要的 / 輕微的", "It's just a minor problem, so don't worry.|He suffered only minor injuries in the accident.", "這只是一個次要的問題，別擔心。|他在車禍中只受了輕傷。"],
@@ -302,7 +302,7 @@ const COMPRESSED_DB = [
     ["enterprise", "企業 / 事業心", "He works for a large multinational enterprise.|Starting a new business is a risky enterprise.", "他在一家大型跨國企業工作。|創業是一項充滿風險的事業。"],
     ["frustrated", "感到沮喪的", "I am so frustrated with this slow internet.|She felt frustrated when she couldn't solve the puzzle.", "我對這緩慢的網路感到非常沮喪（受挫）。|當她無法解開謎題時，她感到很挫折。"],
     ["approach", "接近 / 方法", "The train will soon approach the station.|We need a new approach to solve this issue.", "火車即將接近車站。|我們需要一個新方法來解決這個問題。"],
-    ["consider", "考慮", "Please consider my offer carefully.|We didn't consider the traffic when planning the trip.", "請仔細考慮我的提議。|我們在規劃行程時沒有把交通狀況考慮進去。"]
+    ["consider", "考慮", "Please consider my offer carefully.|We didn't consider the traffic when planning the trip.", "請仔細考慮我的提議。|我們在規劃行程時沒有把交通狀況考慮進去。"],
     ["set up", "設立 / 設置", "They plan to set up a new company.|Let me set up the projector for the meeting.", "他們計畫設立一家新公司。|讓我來為會議設置投影機。"],
     ["riders", "乘客 / 騎士", "The bus riders were waiting in the rain.|Safety rules for motorcycle riders are important.", "公車乘客們在雨中等待。|對機車騎士來說，安全規則很重要。"],
     ["as usual", "一如往常地", "He arrived late, as usual.|The coffee tastes great, as usual.", "他一如往常地遲到了。|咖啡一如往常地好喝。"],
@@ -402,5 +402,5 @@ const COMPRESSED_DB = [
     ["eligible", "有資格的", "You are eligible for a discount if you show your student ID.|Employees are eligible for a bonus after one year.", "出示學生證你就有資格獲得折扣。|員工滿一年後即有資格領取獎金。"],
     ["terminate", "終止", "The company decided to terminate his contract early.|Please terminate the program if it freezes.", "公司決定提早終止他的合約。|如果程式當機，請終止它。"],
     ["expired", "過期的", "I couldn't travel because my passport had expired.|Don't drink that milk; it is expired.", "我無法出國，因為我的護照過期了。|別喝那個牛奶；它過期了。"],
-    ["coordinate", "協調", "We need someone to coordinate the marketing campaign.|The team members must coordinate their efforts.", "我們需要有人來協調這場行銷活動。|團隊成員必須互相協調他們的努力。"]
+    ["coordinate", "協調", "We need someone to coordinate the marketing campaign.|The team members must coordinate their efforts.", "我們需要有人來協調這場行銷活動。|團隊成員必須互相協調他們的努力。"],
 ];
