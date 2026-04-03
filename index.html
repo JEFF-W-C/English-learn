@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 翻轉單字卡 - 重點突擊版</title>
+    <title>AI 翻轉單字卡 - 防呆裝甲版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     
-    <script src="words.js?v=400"></script>
+    <script src="words.js?v=500"></script>
     
     <style>
         :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; --star: #f1c40f; }
@@ -87,7 +87,7 @@
         </div>
 
         <div v-show="currentTab === 'bank'" class="section-box">
-            <h2>我的單字庫20260404版</h2>
+            <h2>我的單字庫</h2>
             
             <div class="filter-bar">
                 <input type="checkbox" id="starFilter" v-model="showStarredOnly">
@@ -214,7 +214,6 @@
                         wordBank: [], quizWords: [], currentQuizIndex: 0, isFlipped: false, 
                         showEditModal: false, editingOriginalWord: null, editData: { word: '', phonetic: '', chinese: '', examples: [], chinese_ex: [] },
                         
-                        // 🌟 新增的過濾狀態
                         showStarredOnly: false,
                         quizStarredOnly: false,
                         isQuizRunning: false
@@ -222,38 +221,35 @@
                 },
                 computed: {
                     currentCard() { return this.quizWords[this.currentQuizIndex] || { examples: [], chinese_ex: [] }; },
-                    // 🌟 動態過濾列表
                     filteredBank() {
-                        if (this.showStarredOnly) {
-                            return this.wordBank.filter(w => w.starred);
-                        }
+                        if (this.showStarredOnly) { return this.wordBank.filter(w => w.starred); }
                         return this.wordBank;
                     },
-                    starredWordsCount() {
-                        return this.wordBank.filter(w => w.starred).length;
-                    }
+                    starredWordsCount() { return this.wordBank.filter(w => w.starred).length; }
                 },
                 mounted() {
-                    // 為了避免和舊資料衝突，改用 v11 儲存庫
-                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v11') || '[]');
+                    // v12 確保資料庫升級
+                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v12') || '[]');
                     
                     let newWordsFromDB = [];
                     if (typeof COMPRESSED_DB !== 'undefined') {
-                        newWordsFromDB = COMPRESSED_DB.map(item => ({
-                            word: item[0], phonetic: "", chinese: item[1],
-                            examples: item[2] ? item[2].split('|') : [], chinese_ex: item[3] ? item[3].split('|') : [],
-                            starred: false // 預設未標記
-                        }));
+                        // 🌟 終極防呆機制：自動過濾掉任何格式錯誤、空白或 undefined 的行數！
+                        newWordsFromDB = COMPRESSED_DB
+                            .filter(item => Array.isArray(item) && item.length > 0 && item[0])
+                            .map(item => ({
+                                word: item[0], phonetic: "", chinese: item[1],
+                                examples: item[2] ? item[2].split('|') : [], chinese_ex: item[3] ? item[3].split('|') : [],
+                                starred: false
+                            }));
                     }
 
-                    // 合併資料
                     newWordsFromDB.forEach(newWord => {
                         let exists = localData.some(localWord => localWord.word.toLowerCase() === newWord.word.toLowerCase());
                         if (!exists) { localData.push(newWord); }
                     });
 
                     this.wordBank = localData;
-                    localStorage.setItem('myFlashcards_v11', JSON.stringify(this.wordBank));
+                    localStorage.setItem('myFlashcards_v12', JSON.stringify(this.wordBank));
                 },
                 methods: {
                     async translate(text) {
@@ -286,22 +282,21 @@
                                 word: entry.word, phonetic: entry.phonetic || (entry.phonetics && entry.phonetics[0] ? entry.phonetics[0].text : ''),
                                 chinese: zhWord, examples: rawExs, chinese_ex: zhExs, starred: false
                             });
-                            localStorage.setItem('myFlashcards_v11', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v12', JSON.stringify(this.wordBank));
                             this.searchQuery = '';
                         } catch (e) { alert("❌ 查無此字！請善用『編輯』功能手動新增喔！"); }
                         this.loading = false;
                     },
                     
-                    // 🌟 星號切換與儲存
                     toggleStar(wordObj) {
                         wordObj.starred = !wordObj.starred;
-                        localStorage.setItem('myFlashcards_v11', JSON.stringify(this.wordBank));
+                        localStorage.setItem('myFlashcards_v12', JSON.stringify(this.wordBank));
                     },
 
                     removeFromBank(wordObj) {
                         if(confirm(`確定要刪除 "${wordObj.word}" 嗎？`)) {
                             this.wordBank = this.wordBank.filter(w => w.word !== wordObj.word);
-                            localStorage.setItem('myFlashcards_v11', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v12', JSON.stringify(this.wordBank));
                         }
                     },
                     openEditModal(wordObj) {
@@ -315,7 +310,7 @@
                         let index = this.wordBank.findIndex(w => w.word === this.editingOriginalWord);
                         if (index !== -1) {
                             this.wordBank[index] = JSON.parse(JSON.stringify(this.editData));
-                            localStorage.setItem('myFlashcards_v11', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v12', JSON.stringify(this.wordBank));
                         }
                         this.closeEditModal();
                     },
@@ -333,7 +328,6 @@
                         window.speechSynthesis.speak(msg);
                     },
                     startQuiz() {
-                        // 🌟 過濾題庫
                         let pool = this.quizStarredOnly ? this.wordBank.filter(w => w.starred) : this.wordBank;
                         
                         if (pool.length === 0) { 
