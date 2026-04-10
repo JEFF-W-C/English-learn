@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 翻轉單字卡 - 終極實戰版</title>
+    <title>AI 翻轉單字卡 - 四大分頁版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     
-    <script src="words.js?v=700"></script>
+    <script src="words.js?v=900"></script>
     
     <style>
         :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; --star: #f1c40f; }
-        /* 🌟 放寬最大寬度，為了容納雙區塊佈局 */
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); max-width: 1100px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .tabs button { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; color: #666; transition: 0.3s; }
+        /* 將寬度調整為適合單頁閱讀的舒適大小 */
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; white-space: nowrap; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tabs button { flex: 1; padding: 12px 15px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; color: #666; transition: 0.3s; flex-shrink: 0;}
         .tabs button.active { background: var(--primary); color: white; }
+        
         .section-box { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group input { flex: 1; padding: 12px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
@@ -34,12 +37,7 @@
         .btn-del { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
         .btn-edit { background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
         
-        /* 🌟 測驗區與句型區的雙區塊排版設定 */
-        .quiz-layout { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
-        .quiz-main { flex: 1; min-width: 320px; }
-        .quiz-sidebar { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-height: 85vh; overflow-y: auto; }
-        
-        .flashcard-scene { perspective: 1000px; width: 100%; height: 350px; margin: 15px 0; }
+        .flashcard-scene { perspective: 1000px; width: 100%; height: 380px; margin: 15px 0; }
         .flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #f0f0f0; overflow-y: auto; }
@@ -58,17 +56,19 @@
         .flip-hint { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 15px; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
         
-        /* 🌟 情境句型區的專屬樣式 */
-        .cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        /* 情境句型區的專屬樣式 */
+        .cat-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
         .cat-tabs::-webkit-scrollbar { display: none; }
-        .cat-btn { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 2px solid var(--primary); background: white; color: var(--primary); cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .cat-btn { flex-shrink: 0; padding: 10px 18px; border-radius: 20px; border: 2px solid var(--primary); background: white; color: var(--primary); cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s; }
         .cat-btn.active { background: var(--primary); color: white; }
-        .phrase-item { background: #f9fbff; border: 1px solid #e1effe; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
-        .phrase-en-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .phrase-en { font-size: 1.1em; font-weight: 600; color: #2c3e50; line-height: 1.4; flex: 1; }
-        .phrase-btn-audio { background: #e1effe; color: var(--primary); border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; flex-shrink: 0; }
-        .btn-show-zh { margin-top: 10px; background: #e2e8f0; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.9em; cursor: pointer; color: #475569; font-weight: bold; }
-        .phrase-zh { display: block; margin-top: 10px; color: #e74c3c; font-weight: bold; font-size: 1em; padding-left: 8px; border-left: 3px solid #e74c3c; }
+        .phrase-item { background: #f9fbff; border: 1px solid #e1effe; padding: 18px; border-radius: 12px; margin-bottom: 15px; }
+        .phrase-en-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+        .phrase-en { font-size: 1.15em; font-weight: 600; color: #2c3e50; line-height: 1.5; flex: 1; }
+        .phrase-btn-audio { background: #e1effe; color: var(--primary); border: none; border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; flex-shrink: 0; transition: 0.2s; }
+        .phrase-btn-audio:active { transform: scale(0.9); }
+        .btn-show-zh { margin-top: 12px; background: #e2e8f0; border: none; padding: 8px 15px; border-radius: 6px; font-size: 0.95em; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s; }
+        .btn-show-zh:hover { background: #cbd5e1; }
+        .phrase-zh { display: block; margin-top: 12px; color: #e74c3c; font-weight: bold; font-size: 1.05em; padding-left: 10px; border-left: 4px solid #e74c3c; line-height: 1.4; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
@@ -90,7 +90,8 @@
         <nav class="tabs">
             <button @click="currentTab = 'add'" :class="{ active: currentTab === 'add' }">➕ 擴充單字</button>
             <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">📚 單字庫 ({{ wordBank.length }})</button>
-            <button @click="currentTab = 'quiz'" :class="{ active: currentTab === 'quiz' }">🎯 翻卡測驗 & 實戰句型</button>
+            <button @click="currentTab = 'quiz'" :class="{ active: currentTab === 'quiz' }">🎯 翻卡測驗</button>
+            <button @click="currentTab = 'phrases'" :class="{ active: currentTab === 'phrases' }">🎒 實戰句型</button>
         </nav>
 
         <div v-show="currentTab === 'add'" class="section-box">
@@ -129,91 +130,87 @@
             </div>
         </div>
 
-        <div v-show="currentTab === 'quiz'" class="quiz-layout">
-            
-            <div class="quiz-main">
-                <div v-if="!isQuizRunning" class="section-box" style="text-align:center; padding: 40px;">
-                    <h2>準備開始測驗？</h2>
-                    <div style="margin: 20px 0; background: #fff3cd; padding: 15px; border-radius: 8px; display: inline-block; text-align: left;">
-                        <label style="cursor: pointer; font-weight: bold; color: #856404; display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" v-model="quizStarredOnly" style="transform: scale(1.3);"> 
-                            🎯 僅從「⭐ 重點單字」抽題
-                        </label>
-                    </div>
-                    <br>
-                    <button @click="startQuiz" class="btn-add" style="padding: 15px 40px; font-size: 1.2em;">🚀 開始測驗 (10題)</button>
+        <div v-show="currentTab === 'quiz'">
+            <div v-if="!isQuizRunning" class="section-box" style="text-align:center; padding: 40px;">
+                <h2>準備開始測驗？</h2>
+                <div style="margin: 20px 0; background: #fff3cd; padding: 15px; border-radius: 8px; display: inline-block; text-align: left;">
+                    <label style="cursor: pointer; font-weight: bold; color: #856404; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" v-model="quizStarredOnly" style="transform: scale(1.3);"> 
+                        🎯 僅從「⭐ 重點單字」抽題
+                    </label>
                 </div>
-
-                <div v-else>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <div style="font-weight: bold; color: #666;">
-                            進度: {{ currentQuizIndex + 1 }} / {{ quizWords.length }}
-                            <span v-if="quizStarredOnly" style="color: #f1c40f; margin-left: 5px;">(⭐)</span>
-                        </div>
-                        <button @click="speak(currentCard.word)" style="background: #e1effe; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                            <span style="font-size: 1.2em;">🔊</span> 唸英文
-                        </button>
-                    </div>
-                    
-                    <div class="flashcard-scene">
-                        <div class="flashcard" :class="{ 'is-flipped': isFlipped }" @click="flipCard">
-                            <div class="card-face card-front">
-                                <div class="card-header"><h3 class="word-title">{{ currentCard.word }}</h3></div>
-                                <div class="ex-container">
-                                    <div v-for="(ex, i) in currentCard.examples" :key="i" class="ex-row">
-                                        <div class="ex-text">{{ ex }}</div>
-                                        <button class="btn-audio" @click.stop="speak(ex)">🔈</button>
-                                    </div>
-                                </div>
-                                <div class="flip-hint">👆 點擊卡片任何地方翻面查看解答</div>
-                            </div>
-                            <div class="card-face card-back">
-                                <div class="card-header" style="border-bottom-color: #d9534f;">
-                                    <h3 class="word-title" style="color: #d9534f;">{{ currentCard.chinese }}</h3>
-                                </div>
-                                <div class="ex-container">
-                                    <div v-for="(zhEx, i) in currentCard.chinese_ex" :key="i" class="ex-row" style="background: #fff5f5;">
-                                        <div class="ex-text" style="color:#c0392b;">{{ zhEx }}</div>
-                                    </div>
-                                </div>
-                                <div class="flip-hint">👆 點擊卡片任何地方翻回正面</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="quiz-controls">
-                        <button @click="prevCard" :disabled="currentQuizIndex === 0">⬅️ 上一字</button>
-                        <button @click="nextCard" v-if="currentQuizIndex < quizWords.length - 1">下一字 ➡️</button>
-                        <button @click="finishQuiz" v-else style="background: #28a745;">🎉 結束測驗</button>
-                    </div>
-                </div>
+                <br>
+                <button @click="startQuiz" class="btn-add" style="padding: 15px 40px; font-size: 1.2em;">🚀 開始測驗 (10題)</button>
             </div>
 
-            <div class="quiz-sidebar">
-                <h3 style="margin-top:0; margin-bottom:15px; color:#2c3e50; border-bottom:2px solid #eee; padding-bottom:10px;">🎒 赴美實戰保命句型</h3>
-                
-                <div class="cat-tabs">
-                    <button v-for="cat in Object.keys(scenarioData)" :key="cat" 
-                            class="cat-btn" :class="{ active: activeCategory === cat }" 
-                            @click="activeCategory = cat">
-                        {{ cat }}
+            <div v-else>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-weight: bold; color: #666;">
+                        進度: {{ currentQuizIndex + 1 }} / {{ quizWords.length }}
+                        <span v-if="quizStarredOnly" style="color: #f1c40f; margin-left: 5px;">(⭐)</span>
+                    </div>
+                    <button @click="speak(currentCard.word)" style="background: #e1effe; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <span style="font-size: 1.2em;">🔊</span> 唸英文
                     </button>
                 </div>
-
-                <div>
-                    <div v-for="(phrase, idx) in scenarioData[activeCategory]" :key="idx" class="phrase-item">
-                        <div class="phrase-en-row">
-                            <div class="phrase-en">{{ phrase.en }}</div>
-                            <button class="phrase-btn-audio" @click="speak(phrase.en)">🔊</button>
+                
+                <div class="flashcard-scene">
+                    <div class="flashcard" :class="{ 'is-flipped': isFlipped }" @click="flipCard">
+                        <div class="card-face card-front">
+                            <div class="card-header"><h3 class="word-title">{{ currentCard.word }}</h3></div>
+                            <div class="ex-container">
+                                <div v-for="(ex, i) in currentCard.examples" :key="i" class="ex-row">
+                                    <div class="ex-text">{{ ex }}</div>
+                                    <button class="btn-audio" @click.stop="speak(ex)">🔈</button>
+                                </div>
+                            </div>
+                            <div class="flip-hint">👆 點擊卡片任何地方翻面查看解答</div>
                         </div>
-                        <div>
-                            <button v-if="!phrase.show" class="btn-show-zh" @click="phrase.show = true">
-                                👁️ 顯示中文
-                            </button>
-                            <span v-else class="phrase-zh">{{ phrase.zh }}</span>
+                        <div class="card-face card-back">
+                            <div class="card-header" style="border-bottom-color: #d9534f;">
+                                <h3 class="word-title" style="color: #d9534f;">{{ currentCard.chinese }}</h3>
+                            </div>
+                            <div class="ex-container">
+                                <div v-for="(zhEx, i) in currentCard.chinese_ex" :key="i" class="ex-row" style="background: #fff5f5;">
+                                    <div class="ex-text" style="color:#c0392b;">{{ zhEx }}</div>
+                                </div>
+                            </div>
+                            <div class="flip-hint">👆 點擊卡片任何地方翻回正面</div>
                         </div>
                     </div>
                 </div>
+                <div class="quiz-controls">
+                    <button @click="prevCard" :disabled="currentQuizIndex === 0">⬅️ 上一字</button>
+                    <button @click="nextCard" v-if="currentQuizIndex < quizWords.length - 1">下一字 ➡️</button>
+                    <button @click="finishQuiz" v-else style="background: #28a745;">🎉 結束測驗</button>
+                </div>
+            </div>
+        </div>
 
+        <div v-show="currentTab === 'phrases'" class="section-box">
+            <h2 style="margin-top:0; color:#2c3e50; border-bottom:2px solid #eee; padding-bottom:10px;">🎒 赴美實戰保命句型</h2>
+            
+            <div class="cat-tabs">
+                <button v-for="cat in Object.keys(scenarioData)" :key="cat" 
+                        class="cat-btn" :class="{ active: activeCategory === cat }" 
+                        @click="activeCategory = cat">
+                    {{ cat }}
+                </button>
+            </div>
+
+            <div>
+                <div v-for="(phrase, idx) in scenarioData[activeCategory]" :key="idx" class="phrase-item">
+                    <div class="phrase-en-row">
+                        <div class="phrase-en">{{ phrase.en }}</div>
+                        <button class="phrase-btn-audio" @click="speak(phrase.en)">🔊</button>
+                    </div>
+                    <div>
+                        <button v-if="!phrase.show" class="btn-show-zh" @click="phrase.show = true">
+                            👁️ 顯示中文
+                        </button>
+                        <span v-else class="phrase-zh">{{ phrase.zh }}</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -412,7 +409,7 @@
             const app = Vue.createApp({
                 data() {
                     return {
-                        currentTab: 'quiz', // 預設開啟測驗與句型區
+                        currentTab: 'bank', // 預設開啟單字庫
                         searchQuery: '', loading: false, 
                         wordBank: [], quizWords: [], currentQuizIndex: 0, isFlipped: false, 
                         showEditModal: false, editingOriginalWord: null, editData: { word: '', phonetic: '', chinese: '', examples: [], chinese_ex: [] },
@@ -421,7 +418,7 @@
                         quizStarredOnly: false,
                         isQuizRunning: false,
 
-                        // 🌟 情境句型區狀態
+                        // 情境句型區狀態
                         scenarioData: {},
                         activeCategory: '海關'
                     }
@@ -454,7 +451,7 @@
                     this.wordBank = localData;
                     localStorage.setItem('myFlashcards_v13', JSON.stringify(this.wordBank));
 
-                    // 🌟 初始化情境句型，為每一句加上 show: false 以控制中文隱藏
+                    // 初始化情境句型，為每一句加上 show: false 以控制中文隱藏
                     let parsedScenarios = JSON.parse(JSON.stringify(SCENARIO_DB));
                     for (let key in parsedScenarios) {
                         parsedScenarios[key].forEach(p => p.show = false);
@@ -573,6 +570,7 @@
                     },
                     finishQuiz() { 
                         this.isQuizRunning = false;
+                        this.currentTab = 'bank'; 
                     }
                 }
             });
