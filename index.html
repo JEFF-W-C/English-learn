@@ -6,7 +6,7 @@
     <title>AI 翻轉單字卡 - 四大分頁版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     
-    <script src="words.js?v=900"></script>
+    <script src="words.js?v=1000"></script>
     
     <style>
         :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; --star: #f1c40f; }
@@ -534,7 +534,7 @@
                         const msg = new SpeechSynthesisUtterance(text); msg.lang = 'en-US'; msg.rate = 0.9; 
                         window.speechSynthesis.speak(msg);
                     },
-                    startQuiz() {
+                 startQuiz() {
                         let pool = this.quizStarredOnly ? this.wordBank.filter(w => w.starred) : this.wordBank;
                         
                         if (pool.length === 0) { 
@@ -542,13 +542,30 @@
                             return; 
                         }
 
-                        let selectedWords = [...pool].sort(() => 0.5 - Math.random()).slice(0, 10);
+                        // 🌟 終極修復：Fisher-Yates 完美隨機洗牌演算法
+                        let shuffledPool = [...pool];
+                        for (let i = shuffledPool.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            // 交換位置
+                            [shuffledPool[i], shuffledPool[j]] = [shuffledPool[j], shuffledPool[i]];
+                        }
+                        
+                        // 洗牌完成後，精準抽出前 10 個單字
+                        let selectedWords = shuffledPool.slice(0, 10);
+
                         this.quizWords = JSON.parse(JSON.stringify(selectedWords)).map(card => {
                             let pairs = [];
                             if (card.examples && card.chinese_ex) {
                                 for(let i=0; i<card.examples.length; i++) { pairs.push({ en: card.examples[i], zh: card.chinese_ex[i] }); }
                             }
-                            if (pairs.length > 2) { pairs = pairs.sort(() => 0.5 - Math.random()).slice(0, 2); }
+                            // 例句也加入隨機洗牌機制
+                            if (pairs.length > 2) { 
+                                for (let i = pairs.length - 1; i > 0; i--) {
+                                    const j = Math.floor(Math.random() * (i + 1));
+                                    [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+                                }
+                                pairs = pairs.slice(0, 2); 
+                            }
                             card.examples = pairs.map(p => p.en); card.chinese_ex = pairs.map(p => p.zh);
                             return card;
                         });
