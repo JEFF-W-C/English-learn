@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 翻轉單字卡 - 四大分頁版</title>
+    <title>AI 翻轉單字卡 - 旗艦升級版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     
-    <script src="words.js?v=1000"></script>
+    <!-- 🌟 強制更新並讀取你的單字庫 (版本號更新至 1200) -->
+    <script src="words.js?v=1200"></script>
     
     <style>
         :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; --star: #f1c40f; }
-        /* 將寬度調整為適合單頁閱讀的舒適大小 */
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
         
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; white-space: nowrap; }
@@ -22,11 +22,13 @@
         .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-group input { flex: 1; padding: 12px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
         .input-group input:focus { border-color: var(--primary); }
-        .btn-add { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-add { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s;}
+        .btn-add:hover { background: #218838; }
         .btn-add:disabled { background: #ccc; cursor: not-allowed; }
         
-        .filter-bar { background: #fff3cd; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-weight: bold; color: #856404; border: 1px solid #ffeeba; }
+        .filter-bar { background: #fff3cd; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; font-weight: bold; color: #856404; border: 1px solid #ffeeba; }
         .filter-bar input[type="checkbox"] { transform: scale(1.3); cursor: pointer; }
+        .letter-select { padding: 6px 10px; border-radius: 6px; border: 1px solid #d4af37; background: white; color: #856404; font-weight: bold; outline: none; font-size: 15px; cursor: pointer; }
 
         .word-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; transition: 0.2s; }
         .word-list-item:hover { background: #fafafa; }
@@ -34,29 +36,36 @@
         .star-btn.active { color: var(--star); transform: scale(1.1); }
         
         .btn-action-group { display: flex; gap: 5px; flex-shrink: 0; }
-        .btn-del { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-        .btn-edit { background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .btn-del { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
+        .btn-del:hover { background: #c0392b; }
+        .btn-edit { background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
+        .btn-edit:hover { background: #d35400; }
         
-        .flashcard-scene { perspective: 1000px; width: 100%; height: 380px; margin: 15px 0; }
+        .flashcard-scene { perspective: 1000px; width: 100%; height: 400px; margin: 15px 0; }
         .flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #f0f0f0; overflow-y: auto; }
         .card-back { transform: rotateY(180deg); background: #fdfdfd; border-color: var(--primary); }
+        
         .card-header { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; border-bottom: 2px dashed #eee; padding-bottom: 15px; flex-shrink: 0; }
         .word-title { font-size: 2.2em; font-weight: 800; color: var(--primary); margin: 0; line-height: 1.2; word-break: break-word; text-align: center;}
         .ex-container { flex: 1; }
         .ex-row { display: flex; align-items: flex-start; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 10px; gap: 10px; }
         .ex-text { flex: 1; font-size: 1.05rem; color: #444; line-height: 1.4; }
-        .btn-audio { background: #f0f2f5; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
+        
+        /* 🌟 加大、加深的例句發音按鈕，防誤觸設計 */
+        .btn-audio-ex { background: #64748b; color: white; border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        .btn-audio-ex:hover { background: #475569; transform: scale(1.05); }
+        .btn-audio-ex:active { transform: scale(0.95); }
         
         .quiz-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-        .quiz-controls button { padding: 12px 25px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .quiz-controls button { padding: 12px 25px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s;}
+        .quiz-controls button:hover { opacity: 0.9; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .flip-hint { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 15px; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
         
-        /* 情境句型區的專屬樣式 */
         .cat-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
         .cat-tabs::-webkit-scrollbar { display: none; }
         .cat-btn { flex-shrink: 0; padding: 10px 18px; border-radius: 20px; border: 2px solid var(--primary); background: white; color: var(--primary); cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s; }
@@ -81,12 +90,27 @@
         .btn-save { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-cancel { background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-add-ex { background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85em; cursor: pointer; float: right; }
+        
+        /* 🌟 全新 Toast 浮動提示框樣式 (取代 alert) */
+        .toast-notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 24px; border-radius: 30px; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-weight: bold; text-align: center; font-size: 15px; letter-spacing: 0.5px; }
+        .toast-enter-active, .toast-leave-active { transition: opacity 0.4s ease, transform 0.4s ease; }
+        .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, -20px); }
+        
         #error-box { display: none; background: #ffeaa7; padding: 20px; border: 2px solid #d63031; color: #d63031; border-radius: 10px; margin-bottom: 20px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
     <div id="error-box"></div>
     <div id="app" style="display: none;">
+        
+        <!-- Toast 浮動提示框 -->
+        <transition name="toast">
+            <div v-if="showToast" class="toast-notification">
+                {{ toastMessage }}
+            </div>
+        </transition>
+
+        <!-- 四大分頁導覽列 -->
         <nav class="tabs">
             <button @click="currentTab = 'add'" :class="{ active: currentTab === 'add' }">➕ 擴充單字</button>
             <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">📚 單字庫 ({{ wordBank.length }})</button>
@@ -94,6 +118,7 @@
             <button @click="currentTab = 'phrases'" :class="{ active: currentTab === 'phrases' }">🎒 實戰句型</button>
         </nav>
 
+        <!-- 1. 擴充單字區塊 -->
         <div v-show="currentTab === 'add'" class="section-box">
             <h2>輸入想學的英文單字</h2>
             <div class="input-group">
@@ -105,15 +130,28 @@
             </div>
         </div>
 
+        <!-- 2. 單字庫區塊 (新增 A-Z 字母篩選與排序) -->
         <div v-show="currentTab === 'bank'" class="section-box">
             <h2>我的單字庫</h2>
             <div class="filter-bar">
-                <input type="checkbox" id="starFilter" v-model="showStarredOnly">
-                <label for="starFilter" style="cursor:pointer;">🌟 僅顯示重點單字 ({{ starredWordsCount }})</label>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="starFilter" v-model="showStarredOnly">
+                    <label for="starFilter" style="cursor:pointer;">🌟 僅顯示重點 ({{ starredWordsCount }})</label>
+                </div>
+                <!-- 🌟 新增 A-Z 字母篩選下拉選單 -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 0.95em;">🔍 字母篩選:</label>
+                    <select v-model="filterLetter" class="letter-select">
+                        <option value="">全部 (最新優先)</option>
+                        <option v-for="letter in alphabet" :key="letter" :value="letter">{{ letter }}</option>
+                    </select>
+                </div>
             </div>
+            
             <div v-if="filteredBank.length === 0" style="text-align:center; color:#999; padding: 20px;">
-                {{ showStarredOnly ? '目前沒有標記任何重點單字喔！' : '單字庫目前為空...' }}
+                找不到符合條件的單字喔！
             </div>
+            
             <div v-for="(w, index) in filteredBank" :key="w.word" class="word-list-item">
                 <button class="star-btn" :class="{ active: w.starred }" @click="toggleStar(w)">
                     {{ w.starred ? '⭐' : '☆' }}
@@ -130,6 +168,7 @@
             </div>
         </div>
 
+        <!-- 3. 翻卡測驗區塊 -->
         <div v-show="currentTab === 'quiz'">
             <div v-if="!isQuizRunning" class="section-box" style="text-align:center; padding: 40px;">
                 <h2>準備開始測驗？</h2>
@@ -144,14 +183,22 @@
             </div>
 
             <div v-else>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <div style="font-weight: bold; color: #666;">
+                <!-- 測驗上方：進度列與發音/標記按鈕群 -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <div style="font-weight: bold; color: #666; margin-top: 8px;">
                         進度: {{ currentQuizIndex + 1 }} / {{ quizWords.length }}
                         <span v-if="quizStarredOnly" style="color: #f1c40f; margin-left: 5px;">(⭐)</span>
                     </div>
-                    <button @click="speak(currentCard.word)" style="background: #e1effe; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <span style="font-size: 1.2em;">🔊</span> 唸英文
-                    </button>
+                    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                        <button @click="speak(currentCard.word)" style="background: #e1effe; color: var(--primary); border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <span style="font-size: 1.2em;">🔊</span> 唸英文
+                        </button>
+                        <!-- 🌟 新增：測驗中的星號標記按鈕 -->
+                        <button @click="toggleStarInQuiz(currentCard)" style="background: #fff8e1; color: #b8860b; border: 1px solid #ffeeba; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;">
+                            <span style="font-size: 1.2em;">{{ currentCard.starred ? '⭐' : '☆' }}</span> 
+                            {{ currentCard.starred ? '已標記重點' : '標記重點' }}
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="flashcard-scene">
@@ -161,7 +208,8 @@
                             <div class="ex-container">
                                 <div v-for="(ex, i) in currentCard.examples" :key="i" class="ex-row">
                                     <div class="ex-text">{{ ex }}</div>
-                                    <button class="btn-audio" @click.stop="speak(ex)">🔈</button>
+                                    <!-- 🌟 加大且加深顏色的例句發音按鈕，加上 .stop 防止翻面 -->
+                                    <button class="btn-audio-ex" @click.stop="speak(ex)">🔈</button>
                                 </div>
                             </div>
                             <div class="flip-hint">👆 點擊卡片任何地方翻面查看解答</div>
@@ -187,6 +235,7 @@
             </div>
         </div>
 
+        <!-- 4. 實戰句型區塊 -->
         <div v-show="currentTab === 'phrases'" class="section-box">
             <h2 style="margin-top:0; color:#2c3e50; border-bottom:2px solid #eee; padding-bottom:10px;">🎒 赴美實戰保命句型</h2>
             
@@ -214,6 +263,7 @@
             </div>
         </div>
 
+        <!-- 編輯視窗 -->
         <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
             <div class="modal-content">
                 <h3>編輯單字卡</h3>
@@ -242,8 +292,25 @@
     </div>
 
     <script>
-        // 🌟 140 句實戰情境劇本資料庫
+        // 🌟 更新版實戰劇本資料庫 (加入面試篇)
         const SCENARIO_DB = {
+            '面試': [
+                { en: "Thank you for inviting me to this interview.", zh: "感謝您邀請我參加這次面試。" },
+                { en: "Could you tell me a little bit about yourself?", zh: "你能簡單介紹一下你自己嗎？" },
+                { en: "I have over five years of experience in project management.", zh: "我在專案管理方面有超過五年的經驗。" },
+                { en: "What do you consider to be your greatest strengths?", zh: "你認為你最大的優勢是什麼？" },
+                { en: "My greatest strength is my ability to solve problems quickly.", zh: "我最大的優勢是快速解決問題的能力。" },
+                { en: "What is your biggest weakness?", zh: "你最大的弱點是什麼？" },
+                { en: "I tend to be overly critical of my own work.", zh: "我往往對自己的工作過於挑剔。" },
+                { en: "Why are you interested in this position?", zh: "你為什麼對這個職位感興趣？" },
+                { en: "I've always admired your company's innovative culture.", zh: "我一直很欣賞貴公司創新的文化。" },
+                { en: "Why should we hire you for this role?", zh: "我們為什麼應該錄用你擔任這個職位？" },
+                { en: "Where do you see yourself in five years?", zh: "你預期自己五年後會有什麼發展？" },
+                { en: "Can you describe a challenge you faced and how you handled it?", zh: "你能描述一個你面臨的挑戰以及你是如何處理的嗎？" },
+                { en: "I am a quick learner and adapt well to new environments.", zh: "我學習能力強，能很好地適應新環境。" },
+                { en: "What are your salary expectations for this role?", zh: "你對這個職位的期望薪資是多少？" },
+                { en: "Do you have any questions for us?", zh: "你有什麼問題想問我們的嗎？" }
+            ],
             '海關': [
                 { en: "Passport and customs declaration form, please.", zh: "請出示護照和海關申報表。" },
                 { en: "What is the primary purpose of your visit?", zh: "您這次拜訪的主要目的是什麼？" },
@@ -409,31 +476,49 @@
             const app = Vue.createApp({
                 data() {
                     return {
-                        currentTab: 'bank', // 預設開啟單字庫
+                        currentTab: 'bank',
                         searchQuery: '', loading: false, 
                         wordBank: [], quizWords: [], currentQuizIndex: 0, isFlipped: false, 
                         showEditModal: false, editingOriginalWord: null, editData: { word: '', phonetic: '', chinese: '', examples: [], chinese_ex: [] },
                         
                         showStarredOnly: false,
+                        filterLetter: '', // A-Z 篩選狀態
+                        alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
                         quizStarredOnly: false,
                         isQuizRunning: false,
 
-                        // 情境句型區狀態
                         scenarioData: {},
-                        activeCategory: '海關'
+                        activeCategory: '面試', // 預設顯示面試
+                        
+                        // 🌟 Toast 提示框狀態
+                        showToast: false,
+                        toastMessage: ''
                     }
                 },
                 computed: {
                     currentCard() { return this.quizWords[this.currentQuizIndex] || { examples: [], chinese_ex: [] }; },
                     filteredBank() {
-                        if (this.showStarredOnly) { return this.wordBank.filter(w => w.starred); }
-                        return this.wordBank;
+                        let result = this.wordBank;
+                        // 1. 重點篩選
+                        if (this.showStarredOnly) { 
+                            result = result.filter(w => w.starred); 
+                        }
+                        // 2. 字母篩選
+                        if (this.filterLetter) {
+                            result = result.filter(w => w.word.toUpperCase().startsWith(this.filterLetter));
+                        }
+                        
+                        // 3. 排序：如果有選字母，為了方便閱讀，自動按 A-Z 排列；沒選的話就最新優先
+                        if (this.filterLetter) {
+                            return result.slice().sort((a, b) => a.word.localeCompare(b.word));
+                        }
+                        return result;
                     },
                     starredWordsCount() { return this.wordBank.filter(w => w.starred).length; }
                 },
                 mounted() {
                     // 初始化單字庫
-                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v13') || '[]');
+                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v14') || '[]');
                     let newWordsFromDB = [];
                     if (typeof COMPRESSED_DB !== 'undefined') {
                         newWordsFromDB = COMPRESSED_DB
@@ -449,9 +534,9 @@
                         if (!exists) { localData.push(newWord); }
                     });
                     this.wordBank = localData;
-                    localStorage.setItem('myFlashcards_v13', JSON.stringify(this.wordBank));
+                    localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
 
-                    // 初始化情境句型，為每一句加上 show: false 以控制中文隱藏
+                    // 初始化情境句型
                     let parsedScenarios = JSON.parse(JSON.stringify(SCENARIO_DB));
                     for (let key in parsedScenarios) {
                         parsedScenarios[key].forEach(p => p.show = false);
@@ -459,6 +544,13 @@
                     this.scenarioData = parsedScenarios;
                 },
                 methods: {
+                    // 🌟 呼叫 Toast 提示框的共用函數
+                    notify(msg) {
+                        this.toastMessage = msg;
+                        this.showToast = true;
+                        setTimeout(() => { this.showToast = false; }, 3000); // 3秒後自動消失
+                    },
+                    
                     async translate(text) {
                         try {
                             const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
@@ -470,7 +562,7 @@
                         const wordToSearch = this.searchQuery.trim().toLowerCase();
                         if (!wordToSearch) return;
                         if (this.wordBank.some(w => w.word.toLowerCase() === wordToSearch)) {
-                            alert("這個單字已經在你的單字庫囉！");
+                            this.notify("✅ 這個單字已經在你的單字庫囉！");
                             this.searchQuery = ''; return;
                         }
                         this.loading = true;
@@ -489,21 +581,36 @@
                                 word: entry.word, phonetic: entry.phonetic || (entry.phonetics && entry.phonetics[0] ? entry.phonetics[0].text : ''),
                                 chinese: zhWord, examples: rawExs, chinese_ex: zhExs, starred: false
                             });
-                            localStorage.setItem('myFlashcards_v13', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
                             this.searchQuery = '';
-                        } catch (e) { alert("❌ 查無此字！請善用『編輯』功能手動新增喔！"); }
+                            this.notify(`🎉 成功新增單字: ${entry.word}`);
+                        } catch (e) { 
+                            this.notify("❌ 查無此字！請善用『編輯』功能手動新增。"); 
+                        }
                         this.loading = false;
                     },
                     
                     toggleStar(wordObj) {
                         wordObj.starred = !wordObj.starred;
-                        localStorage.setItem('myFlashcards_v13', JSON.stringify(this.wordBank));
+                        localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                    },
+                    
+                    // 🌟 新增：在測驗中快速標記單字的函數
+                    toggleStarInQuiz(card) {
+                        let target = this.wordBank.find(w => w.word === card.word);
+                        if (target) {
+                            target.starred = !target.starred;
+                            card.starred = target.starred; 
+                            localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                            this.notify(target.starred ? "⭐ 已加入重點單字庫！" : "☆ 已取消標記");
+                        }
                     },
 
                     removeFromBank(wordObj) {
                         if(confirm(`確定要刪除 "${wordObj.word}" 嗎？`)) {
                             this.wordBank = this.wordBank.filter(w => w.word !== wordObj.word);
-                            localStorage.setItem('myFlashcards_v13', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                            this.notify("🗑️ 單字已刪除");
                         }
                     },
                     openEditModal(wordObj) {
@@ -513,11 +620,12 @@
                     },
                     closeEditModal() { this.showEditModal = false; this.editingOriginalWord = null; },
                     saveEdit() {
-                        if (!this.editData.word.trim()) { alert("英文單字不能為空白！"); return; }
+                        if (!this.editData.word.trim()) { this.notify("⚠️ 英文單字不能為空白！"); return; }
                         let index = this.wordBank.findIndex(w => w.word === this.editingOriginalWord);
                         if (index !== -1) {
                             this.wordBank[index] = JSON.parse(JSON.stringify(this.editData));
-                            localStorage.setItem('myFlashcards_v13', JSON.stringify(this.wordBank));
+                            localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                            this.notify("💾 編輯已儲存");
                         }
                         this.closeEditModal();
                     },
@@ -534,11 +642,11 @@
                         const msg = new SpeechSynthesisUtterance(text); msg.lang = 'en-US'; msg.rate = 0.9; 
                         window.speechSynthesis.speak(msg);
                     },
-                 startQuiz() {
+                    startQuiz() {
                         let pool = this.quizStarredOnly ? this.wordBank.filter(w => w.starred) : this.wordBank;
                         
                         if (pool.length === 0) { 
-                            alert(this.quizStarredOnly ? "你還沒有標記任何重點單字喔！" : "單字庫目前是空的！");
+                            this.notify(this.quizStarredOnly ? "⚠️ 你還沒有標記任何重點單字喔！" : "⚠️ 單字庫目前是空的！");
                             return; 
                         }
 
@@ -546,8 +654,7 @@
                         let shuffledPool = [...pool];
                         for (let i = shuffledPool.length - 1; i > 0; i--) {
                             const j = Math.floor(Math.random() * (i + 1));
-                            // 交換位置
-                            [shuffledPool[i], shuffledPool[j]] = [shuffledPool[j], shuffledPool[i]];
+                            [shuffledPool[i], shuffledPool[j]] = [shuffledPool[j], shuffledPool[i]]; // 交換位置
                         }
                         
                         // 洗牌完成後，精準抽出前 10 個單字
@@ -558,7 +665,6 @@
                             if (card.examples && card.chinese_ex) {
                                 for(let i=0; i<card.examples.length; i++) { pairs.push({ en: card.examples[i], zh: card.chinese_ex[i] }); }
                             }
-                            // 例句也加入隨機洗牌機制
                             if (pairs.length > 2) { 
                                 for (let i = pairs.length - 1; i > 0; i--) {
                                     const j = Math.floor(Math.random() * (i + 1));
