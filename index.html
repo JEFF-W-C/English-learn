@@ -179,7 +179,7 @@
                     </label>
                 </div>
                 <br>
-                <button @click="startQuiz" class="btn-add" style="padding: 15px 40px; font-size: 1.2em;">🚀 開始測驗 (10題)</button>
+                <button @click="startQuiz" class="btn-add" style="padding: 15px 40px; font-size: 1.2em;">🚀 開始測驗 (15題)</button>
             </div>
 
             <div v-else>
@@ -657,8 +657,8 @@
                             [shuffledPool[i], shuffledPool[j]] = [shuffledPool[j], shuffledPool[i]]; // 交換位置
                         }
                         
-                        // 洗牌完成後，精準抽出前 10 個單字
-                        let selectedWords = shuffledPool.slice(0, 10);
+                        // 洗牌完成後，精準抽出前 15 個單字
+                        let selectedWords = shuffledPool.slice(0, 15);
 
                         this.quizWords = JSON.parse(JSON.stringify(selectedWords)).map(card => {
                             let pairs = [];
