@@ -585,6 +585,8 @@
                             this.searchQuery = '';
                             this.notify(`🎉 成功新增單字: ${entry.word}`);
                         } catch (e) { 
+                           // 把具體的錯誤訊息印在畫面上，方便你在手機上除錯
+                            alert("新增失敗，錯誤原因：" + e.message);
                             this.notify("❌ 查無此字！請善用『編輯』功能手動新增。"); 
                         }
                         this.loading = false;
