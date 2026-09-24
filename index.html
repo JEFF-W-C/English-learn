@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 翻轉單字卡 - 旗艦升級版</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    
+    <!-- 🌟 強制更新並讀取你的單字庫 (版本號更新至 1200) -->
+    <script src="words.js?v=1200"></script>
+    
+    <style>
+        :root { --primary: #4a90e2; --bg: #f5f7fa; --card-bg: #ffffff; --text: #333333; --star: #f1c40f; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; white-space: nowrap; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tabs button { flex: 1; padding: 12px 15px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; color: #666; transition: 0.3s; flex-shrink: 0;}
+        .tabs button.active { background: var(--primary); color: white; }
+        
+        .section-box { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group input { flex: 1; padding: 12px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
+        .input-group input:focus { border-color: var(--primary); }
+        .btn-add { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s;}
+        .btn-add:hover { background: #218838; }
+        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .filter-bar { background: #fff3cd; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; font-weight: bold; color: #856404; border: 1px solid #ffeeba; }
+        .filter-bar input[type="checkbox"] { transform: scale(1.3); cursor: pointer; }
+        .letter-select { padding: 6px 10px; border-radius: 6px; border: 1px solid #d4af37; background: white; color: #856404; font-weight: bold; outline: none; font-size: 15px; cursor: pointer; }
+
+        .word-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; transition: 0.2s; }
+        .word-list-item:hover { background: #fafafa; }
+        .star-btn { background: none; border: none; font-size: 1.6em; cursor: pointer; color: #ccc; transition: 0.2s; padding: 0 10px 0 0; }
+        .star-btn.active { color: var(--star); transform: scale(1.1); }
+        
+        .btn-action-group { display: flex; gap: 5px; flex-shrink: 0; }
+        .btn-del { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
+        .btn-del:hover { background: #c0392b; }
+        .btn-edit { background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
+        .btn-edit:hover { background: #d35400; }
+        
+        .flashcard-scene { perspective: 1000px; width: 100%; height: 400px; margin: 15px 0; }
+        .flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
+        .flashcard.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #f0f0f0; overflow-y: auto; }
+        .card-back { transform: rotateY(180deg); background: #fdfdfd; border-color: var(--primary); }
+        
+        .card-header { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; border-bottom: 2px dashed #eee; padding-bottom: 15px; flex-shrink: 0; }
+        .word-title { font-size: 2.2em; font-weight: 800; color: var(--primary); margin: 0; line-height: 1.2; word-break: break-word; text-align: center;}
+        .ex-container { flex: 1; }
+        .ex-row { display: flex; align-items: flex-start; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 10px; gap: 10px; }
+        .ex-text { flex: 1; font-size: 1.05rem; color: #444; line-height: 1.4; }
+        
+        /* 🌟 加大、加深的例句發音按鈕，防誤觸設計 */
+        .btn-audio-ex { background: #64748b; color: white; border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        .btn-audio-ex:hover { background: #475569; transform: scale(1.05); }
+        .btn-audio-ex:active { transform: scale(0.95); }
+        
+        .quiz-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+        .quiz-controls button { padding: 12px 25px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s;}
+        .quiz-controls button:hover { opacity: 0.9; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .flip-hint { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 15px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        
+        .cat-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
+        .cat-tabs::-webkit-scrollbar { display: none; }
+        .cat-btn { flex-shrink: 0; padding: 10px 18px; border-radius: 20px; border: 2px solid var(--primary); background: white; color: var(--primary); cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s; }
+        .cat-btn.active { background: var(--primary); color: white; }
+        .phrase-item { background: #f9fbff; border: 1px solid #e1effe; padding: 18px; border-radius: 12px; margin-bottom: 15px; }
+        .phrase-en-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+        .phrase-en { font-size: 1.15em; font-weight: 600; color: #2c3e50; line-height: 1.5; flex: 1; }
+        .phrase-btn-audio { background: #e1effe; color: var(--primary); border: none; border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; flex-shrink: 0; transition: 0.2s; }
+        .phrase-btn-audio:active { transform: scale(0.9); }
+        .btn-show-zh { margin-top: 12px; background: #e2e8f0; border: none; padding: 8px 15px; border-radius: 6px; font-size: 0.95em; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s; }
+        .btn-show-zh:hover { background: #cbd5e1; }
+        .phrase-zh { display: block; margin-top: 12px; color: #e74c3c; font-weight: bold; font-size: 1.05em; padding-left: 10px; border-left: 4px solid #e74c3c; line-height: 1.4; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .modal-content h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.9em; font-weight: bold; color: #555; }
+        .form-group input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; outline: none; }
+        .edit-ex-group { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e1e4e8; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; position: sticky; bottom: -10px; background: white; padding-top: 10px; border-top: 1px solid #eee; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-add-ex { background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85em; cursor: pointer; float: right; }
+        
+        /* 🌟 全新 Toast 浮動提示框樣式 (取代 alert) */
+        .toast-notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 24px; border-radius: 30px; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-weight: bold; text-align: center; font-size: 15px; letter-spacing: 0.5px; }
+        .toast-enter-active, .toast-leave-active { transition: opacity 0.4s ease, transform 0.4s ease; }
+        .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, -20px); }
+        
+        #error-box { display: none; background: #ffeaa7; padding: 20px; border: 2px solid #d63031; color: #d63031; border-radius: 10px; margin-bottom: 20px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="error-box"></div>
+    <div id="app" style="display: none;">
+        
+        <!-- Toast 浮動提示框 -->
+        <transition name="toast">
+            <div v-if="showToast" class="toast-notification">
+                {{ toastMessage }}
+            </div>
+        </transition>
+
+        <!-- 四大分頁導覽列 -->
+        <nav class="tabs">
+            <button @click="currentTab = 'add'" :class="{ active: currentTab === 'add' }">➕ 擴充單字</button>
+            <button @click="currentTab = 'bank'" :class="{ active: currentTab === 'bank' }">📚 單字庫 ({{ wordBank.length }})</button>
+            <button @click="currentTab = 'quiz'" :class="{ active: currentTab === 'quiz' }">🎯 翻卡測驗</button>
+            <button @click="currentTab = 'phrases'" :class="{ active: currentTab === 'phrases' }">🎒 實戰句型</button>
+        </nav>
+
+        <!-- 1. 擴充單字區塊 -->
+        <div v-show="currentTab === 'add'" class="section-box">
+            <h2>輸入想學的英文單字</h2>
+            <div class="input-group">
+                <input type="text" v-model="searchQuery" @keyup.enter="searchAndAddWord" placeholder="例如: commute...">
+                <button @click="searchAndAddWord" :disabled="loading || !searchQuery.trim()" class="btn-add">
+                    <span v-if="loading" class="loader"></span>
+                    <span v-else>一鍵獲取</span>
+                </button>
+            </div>
+            
+            <!-- 🌟 新增手動按鈕，防止 API 掛掉時無法新增 -->
+            <div style="text-align: right; margin-top: 10px;">
+                <span style="font-size: 0.9em; color: #888; margin-right: 10px;">找不到單字或連線異常？</span>
+                <button @click="openManualAddModal" style="background: #f39c12; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;">✏️ 手動新增</button>
+            </div>
+        </div>
+
+        <!-- 2. 單字庫區塊 (新增 A-Z 字母篩選與排序) -->
+        <div v-show="currentTab === 'bank'" class="section-box">
+            <h2>我的單字庫</h2>
+            <div class="filter-bar">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="starFilter" v-model="showStarredOnly">
+                    <label for="starFilter" style="cursor:pointer;">🌟 僅顯示重點 ({{ starredWordsCount }})</label>
+                </div>
+                <!-- 🌟 新增 A-Z 字母篩選下拉選單 -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 0.95em;">🔍 字母篩選:</label>
+                    <select v-model="filterLetter" class="letter-select">
+                        <option value="">全部 (最新優先)</option>
+                        <option v-for="letter in alphabet" :key="letter" :value="letter">{{ letter }}</option>
+                    </select>
+                </div>
+                
+                <!-- 🌟 新增：雲端備份匯出/匯入按鈕 -->
+                <div style="display: flex; gap: 8px; margin-left: auto;">
+                    <button @click="exportData" style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: bold;">⬇️ 匯出備份</button>
+                    <label style="background: #2980b9; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: bold;">
+                        ⬆️ 匯入備份
+                        <input type="file" @change="importData" accept=".json" style="display: none;">
+                    </label>
+                </div>
+            </div>
+            
+            <div v-if="filteredBank.length === 0" style="text-align:center; color:#999; padding: 20px;">
+                找不到符合條件的單字喔！
+            </div>
+            
+            <div v-for="(w, index) in filteredBank" :key="w.word" class="word-list-item">
+                <button class="star-btn" :class="{ active: w.starred }" @click="toggleStar(w)">
+                    {{ w.starred ? '⭐' : '☆' }}
+                </button>
+                <div style="font-size: 1.1em; flex: 1;">
+                    <strong>{{ w.word }}</strong> 
+                    <button @click="speak(w.word)" style="background:none; border:none; cursor:pointer; font-size:1.2em; margin-left:5px; vertical-align:middle;">🔊</button>
+                    <div style="color: #d9534f; font-size: 0.9em; margin-top: 4px;">{{ w.chinese }}</div>
+                </div>
+                <div class="btn-action-group">
+                    <button @click="openEditModal(w)" class="btn-edit">✏️</button>
+                    <button @click="removeFromBank(w)" class="btn-del">🗑️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 翻卡測驗區塊 -->
+        <div v-show="currentTab === 'quiz'">
+            <div v-if="!isQuizRunning" class="section-box" style="text-align:center; padding: 40px;">
+                <h2>準備開始測驗？</h2>
+                <div style="margin: 20px 0; background: #fff3cd; padding: 15px; border-radius: 8px; display: inline-block; text-align: left;">
+                    <label style="cursor: pointer; font-weight: bold; color: #856404; display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" v-model="quizStarredOnly" style="transform: scale(1.3);"> 
+                        🎯 僅從「⭐ 重點單字」抽題
+                    </label>
+                </div>
+                <br>
+                <button @click="startQuiz" class="btn-add" style="padding: 15px 40px; font-size: 1.2em;">🚀 開始測驗 (10題)</button>
+            </div>
+
+            <div v-else>
+                <!-- 測驗上方：進度列與發音/標記按鈕群 -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <div style="font-weight: bold; color: #666; margin-top: 8px;">
+                        進度: {{ currentQuizIndex + 1 }} / {{ quizWords.length }}
+                        <span v-if="quizStarredOnly" style="color: #f1c40f; margin-left: 5px;">(⭐)</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                        <button @click="speak(currentCard.word)" style="background: #e1effe; color: var(--primary); border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <span style="font-size: 1.2em;">🔊</span> 唸英文
+                        </button>
+                        <!-- 🌟 新增：測驗中的星號標記按鈕 -->
+                        <button @click="toggleStarInQuiz(currentCard)" style="background: #fff8e1; color: #b8860b; border: 1px solid #ffeeba; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;">
+                            <span style="font-size: 1.2em;">{{ currentCard.starred ? '⭐' : '☆' }}</span> 
+                            {{ currentCard.starred ? '已標記重點' : '標記重點' }}
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flashcard-scene">
+                    <div class="flashcard" :class="{ 'is-flipped': isFlipped }" @click="flipCard">
+                        <div class="card-face card-front">
+                            <div class="card-header"><h3 class="word-title">{{ currentCard.word }}</h3></div>
+                            <div class="ex-container">
+                                <div v-for="(ex, i) in currentCard.examples" :key="i" class="ex-row">
+                                    <div class="ex-text">{{ ex }}</div>
+                                    <!-- 🌟 加大且加深顏色的例句發音按鈕，加上 .stop 防止翻面 -->
+                                    <button class="btn-audio-ex" @click.stop="speak(ex)">🔈</button>
+                                </div>
+                            </div>
+                            <div class="flip-hint">👆 點擊卡片任何地方翻面查看解答</div>
+                        </div>
+                        <div class="card-face card-back">
+                            <div class="card-header" style="border-bottom-color: #d9534f;">
+                                <h3 class="word-title" style="color: #d9534f;">{{ currentCard.chinese }}</h3>
+                            </div>
+                            <div class="ex-container">
+                                <div v-for="(zhEx, i) in currentCard.chinese_ex" :key="i" class="ex-row" style="background: #fff5f5;">
+                                    <div class="ex-text" style="color:#c0392b;">{{ zhEx }}</div>
+                                </div>
+                            </div>
+                            <div class="flip-hint">👆 點擊卡片任何地方翻回正面</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="quiz-controls">
+                    <button @click="prevCard" :disabled="currentQuizIndex === 0">⬅️ 上一字</button>
+                    <button @click="nextCard" v-if="currentQuizIndex < quizWords.length - 1">下一字 ➡️</button>
+                    <button @click="finishQuiz" v-else style="background: #28a745;">🎉 結束測驗</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 實戰句型區塊 -->
+        <div v-show="currentTab === 'phrases'" class="section-box">
+            <h2 style="margin-top:0; color:#2c3e50; border-bottom:2px solid #eee; padding-bottom:10px;">🎒 赴美實戰保命句型</h2>
+            
+            <div class="cat-tabs">
+                <button v-for="cat in Object.keys(scenarioData)" :key="cat" 
+                        class="cat-btn" :class="{ active: activeCategory === cat }" 
+                        @click="activeCategory = cat">
+                    {{ cat }}
+                </button>
+            </div>
+
+            <div>
+                <div v-for="(phrase, idx) in scenarioData[activeCategory]" :key="idx" class="phrase-item">
+                    <div class="phrase-en-row">
+                        <div class="phrase-en">{{ phrase.en }}</div>
+                        <button class="phrase-btn-audio" @click="speak(phrase.en)">🔊</button>
+                    </div>
+                    <div>
+                        <button v-if="!phrase.show" class="btn-show-zh" @click="phrase.show = true">
+                            👁️ 顯示中文
+                        </button>
+                        <span v-else class="phrase-zh">{{ phrase.zh }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 編輯視窗 -->
+        <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
+            <div class="modal-content">
+                <h3>{{ editingOriginalWord ? '編輯單字卡' : '手動新增單字' }}</h3>
+                <div class="form-group"><label>英文單字</label><input v-model="editData.word" type="text"></div>
+                <div class="form-group"><label>中文釋義</label><input v-model="editData.chinese" type="text"></div>
+                <div style="margin-top: 25px;">
+                    <button @click="addExample" class="btn-add-ex">➕ 新增一句</button>
+                    <label style="font-size: 0.9em; font-weight: bold; color: #555;">例句管理</label>
+                </div>
+                <div style="margin-top: 10px;">
+                    <div v-for="(ex, i) in editData.examples" :key="i" class="edit-ex-group">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="font-size: 0.85em; color: var(--primary); font-weight: bold;">句子 {{ i + 1 }}</span>
+                            <button @click="removeExample(i)" style="background:none; border:none; color:#ff4757; cursor:pointer;">刪除</button>
+                        </div>
+                        <input v-model="editData.examples[i]" type="text" placeholder="英文例句" style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px;">
+                        <input v-model="editData.chinese_ex[i]" type="text" placeholder="中文翻譯" style="width:100%; box-sizing:border-box; padding:8px;">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button @click="closeEditModal" class="btn-cancel">取消</button>
+                    <button @click="saveEdit" class="btn-save">💾 儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🌟 更新版實戰劇本資料庫 (加入面試篇)
+        const SCENARIO_DB = {
+            '面試': [
+                { en: "Thank you for inviting me to this interview.", zh: "感謝您邀請我參加這次面試。" },
+                { en: "Could you tell me a little bit about yourself?", zh: "你能簡單介紹一下你自己嗎？" },
+                { en: "I have over five years of experience in project management.", zh: "我在專案管理方面有超過五年的經驗。" },
+                { en: "What do you consider to be your greatest strengths?", zh: "你認為你最大的優勢是什麼？" },
+                { en: "My greatest strength is my ability to solve problems quickly.", zh: "我最大的優勢是快速解決問題的能力。" },
+                { en: "What is your biggest weakness?", zh: "你最大的弱點是什麼？" },
+                { en: "I tend to be overly critical of my own work.", zh: "我往往對自己的工作過於挑剔。" },
+                { en: "Why are you interested in this position?", zh: "你為什麼對這個職位感興趣？" },
+                { en: "I've always admired your company's innovative culture.", zh: "我一直很欣賞貴公司創新的文化。" },
+                { en: "Why should we hire you for this role?", zh: "我們為什麼應該錄用你擔任這個職位？" },
+                { en: "Where do you see yourself in five years?", zh: "你預期自己五年後會有什麼發展？" },
+                { en: "Can you describe a challenge you faced and how you handled it?", zh: "你能描述一個你面臨的挑戰以及你是如何處理的嗎？" },
+                { en: "I am a quick learner and adapt well to new environments.", zh: "我學習能力強，能很好地適應新環境。" },
+                { en: "What are your salary expectations for this role?", zh: "你對這個職位的期望薪資是多少？" },
+                { en: "Do you have any questions for us?", zh: "你有什麼問題想問我們的嗎？" }
+            ],
+            '海關': [
+                { en: "Passport and customs declaration form, please.", zh: "請出示護照和海關申報表。" },
+                { en: "What is the primary purpose of your visit?", zh: "您這次拜訪的主要目的是什麼？" },
+                { en: "I am here for sightseeing and vacation.", zh: "我是來觀光度假的。" },
+                { en: "We are traveling together as a group of seven.", zh: "我們一行七個人一起旅行。" },
+                { en: "How long will you be staying in the United States?", zh: "您預計在美國停留多久？" },
+                { en: "We will be staying for exactly 10 days.", zh: "我們將停留剛好 10 天。" },
+                { en: "Where will you be staying during your trip?", zh: "您旅途期間將會住在哪裡？" },
+                { en: "We are staying at a hotel in the downtown area.", zh: "我們住在市區的飯店。" },
+                { en: "Do you have a return ticket booked?", zh: "您有訂好回程機票嗎？" },
+                { en: "Yes, here is my return flight confirmation.", zh: "有的，這是我的回程航班確認紀錄。" },
+                { en: "What is your current occupation?", zh: "您目前的職業是什麼？" },
+                { en: "I work as a design lead in Taiwan.", zh: "我在台灣擔任設計主管。" },
+                { en: "Are you carrying any food or agricultural products?", zh: "您有攜帶任何食物或農產品嗎？" },
+                { en: "No, I don't have any restricted items with me.", zh: "沒有，我身上沒有攜帶任何違禁品。" },
+                { en: "How much currency are you carrying right now?", zh: "您現在攜帶了多少現金？" },
+                { en: "I have about one thousand dollars in cash.", zh: "我大約帶了一千元美金現金。" },
+                { en: "Have you ever been to the US before?", zh: "您之前來過美國嗎？" },
+                { en: "This is actually my first time visiting.", zh: "這其實是我第一次來訪。" },
+                { en: "Please look straight at the camera for a photo.", zh: "請直視鏡頭拍照。" },
+                { en: "Place your right four fingers on the scanner, please.", zh: "請將右手四根手指放在掃描器上。" }
+            ],
+            '餐廳點餐': [
+                { en: "Hi, we'd like a table for seven, please.", zh: "你好，麻煩給我們七個人的位子。" },
+                { en: "We have a reservation under the name Jeff.", zh: "我們有訂位，名字是 Jeff。" },
+                { en: "Could we get the menus and the drink list, please?", zh: "麻煩給我們菜單和飲料單好嗎？" },
+                { en: "What is today's special or chef's recommendation?", zh: "今天的特餐或主廚推薦是什麼？" },
+                { en: "What do you recommend for a large group to share?", zh: "你推薦什麼適合大團體分享的菜色？" },
+                { en: "I'll have the steak, medium rare, please.", zh: "我要一份牛排，三分熟。" },
+                { en: "Can I get the salad dressing on the side?", zh: "沙拉醬可以幫我分開裝嗎？" },
+                { en: "Does this specific dish contain any nuts or seafood?", zh: "這道菜含有任何堅果或海鮮嗎？" },
+                { en: "We are not ready to order yet. Give us a few more minutes.", zh: "我們還沒準備好點餐。請再給我們幾分鐘。" },
+                { en: "Could we just get some glasses of tap water for now?", zh: "我們可以先要幾杯自來水(免費水)嗎？" },
+                { en: "Excuse me, we need some extra napkins over here.", zh: "不好意思，我們這裡需要一些額外的餐巾紙。" },
+                { en: "Could we get some more complimentary bread, please?", zh: "可以再給我們一些免費的餐前麵包嗎？" },
+                { en: "Excuse me, I don't think I ordered this dish.", zh: "不好意思，我好像沒有點這道菜。" },
+                { en: "Could you pack these leftovers in a to-go box?", zh: "可以幫我把這些剩菜打包帶走嗎？" },
+                { en: "We are all finished. Can we get the bill, please?", zh: "我們吃飽了。麻煩結帳。" },
+                { en: "Can we get separate checks for the seven of us?", zh: "我們七個人可以分開結帳嗎？" },
+                { en: "Is the gratuity or service charge already included in the bill?", zh: "帳單裡已經包含小費或服務費了嗎？" },
+                { en: "We will pay the total amount together with this credit card.", zh: "我們會用這張信用卡一起付總金額。" },
+                { en: "I'm paying in cash. Please keep the change.", zh: "我付現金。不用找零了。" },
+                { en: "The food was absolutely delicious, thank you so much.", zh: "食物絕對是美味極了，非常感謝。" }
+            ],
+            '問路': [
+                { en: "Excuse me, could you help me for a second?", zh: "不好意思，能耽誤你一秒鐘幫個忙嗎？" },
+                { en: "I'm trying to find the nearest subway station.", zh: "我正在找最近的地鐵站。" },
+                { en: "How do I get to this specific address from here?", zh: "從這裡我要怎麼去這個地址？" },
+                { en: "Is the museum far from here to walk?", zh: "從這裡走到博物館會很遠嗎？" },
+                { en: "About how long does it take to get there on foot?", zh: "走路到那裡大約需要花多少時間？" },
+                { en: "Can you show me the best route on my Google Maps?", zh: "你能在我的 Google 地圖上指點最好的路線嗎？" },
+                { en: "Am I heading in the right direction for the park?", zh: "我往公園走的方向是對的嗎？" },
+                { en: "You need to go straight down this street for two blocks.", zh: "你需要沿著這條街直走過兩個街區。" },
+                { en: "Turn left at the next major intersection.", zh: "在下一個大十字路口左轉。" },
+                { en: "It's on your right side, right next to the pharmacy.", zh: "它在你的右手邊，就在藥局旁邊。" },
+                { en: "It's located directly across the street from the bank.", zh: "它就在銀行正對面。" },
+                { en: "Which bus line should we take to go downtown?", zh: "我們要去市中心應該搭哪一條公車路線？" },
+                { en: "Excuse me, does this train go directly to the airport?", zh: "請問這班火車有直達機場嗎？" },
+                { en: "How many stops are there until Central Station?", zh: "到中央車站還有幾站？" },
+                { en: "Where is the best place to catch a taxi or an Uber around here?", zh: "這附近哪裡最好搭計程車或叫 Uber？" },
+                { en: "I think we are lost. Can you point us back to Main Street?", zh: "我們好像迷路了。能指引我們回到主街嗎？" },
+                { en: "Do you happen to know the name of this street?", zh: "你剛好知道這條街的名字嗎？" },
+                { en: "Is this neighborhood safe to walk around at night?", zh: "這個社區晚上走動安全嗎？" },
+                { en: "Could you point me toward the public restrooms?", zh: "你能指引我去公共廁所的方向嗎？" },
+                { en: "Thank you so much for your help and time!", zh: "非常感謝你的幫忙與時間！" }
+            ],
+            '超市購物': [
+                { en: "Where can I find the fresh produce section?", zh: "我可以在哪裡找到生鮮蔬果區？" },
+                { en: "Do you sell bottled water in bulk packages?", zh: "你們有賣大包裝的瓶裝水嗎？" },
+                { en: "Could you tell me which aisle has the breakfast cereal?", zh: "你能告訴我早餐穀片在哪一個走道嗎？" },
+                { en: "Is this specific item currently on sale?", zh: "這個特定商品目前有在特價嗎？" },
+                { en: "Can you help me reach that heavy item on the top shelf?", zh: "你能幫我拿最上層那個很重的東西嗎？" },
+                { en: "Do you have any more of this product in the back inventory?", zh: "你們後方庫存還有這個產品嗎？" },
+                { en: "I am just browsing around right now, thank you.", zh: "我現在只是隨便看看，謝謝。" },
+                { en: "Excuse me, where are the checkout counters located?", zh: "不好意思，結帳櫃檯在哪裡？" },
+                { en: "Are there any self-checkout lanes available in this store?", zh: "這家店有提供自助結帳通道嗎？" },
+                { en: "Do you accept Apple Pay or Google Pay here?", zh: "你們這裡收 Apple Pay 或 Google Pay 嗎？" },
+                { en: "We will need a plastic or paper bag, please.", zh: "我們需要一個塑膠袋或紙袋，謝謝。" },
+                { en: "No bags needed, we brought our own reusable shopping bags.", zh: "不需要袋子，我們自己帶了環保購物袋。" },
+                { en: "Could you double bag the heavy items, please?", zh: "重物可以麻煩幫我套兩層袋子嗎？" },
+                { en: "Can I get a printed receipt for this transaction, please?", zh: "這筆交易可以給我印出來的收據嗎？" },
+                { en: "I would like to return this item. Here is my receipt.", zh: "我想退換這個商品。這是我的收據。" },
+                { en: "Excuse me, I think this carton of milk is expired.", zh: "不好意思，我覺得這盒牛奶過期了。" },
+                { en: "Where should I return the shopping cart after I'm done?", zh: "我用完後該把購物車退還到哪裡？" },
+                { en: "Do I need a store membership card to shop here?", zh: "在這裡購物需要商店會員卡嗎？" },
+                { en: "How much does this cost per pound?", zh: "這個每磅賣多少錢？" },
+                { en: "Could you slice the ham a little bit thinner, please?", zh: "可以麻煩把火腿切薄一點嗎？" }
+            ],
+            '加油': [
+                { en: "Which gas pump should I pull my car up to?", zh: "我該把車停到哪一個加油機旁？" },
+                { en: "Could you show me how to operate this gas pump?", zh: "你能示範怎麼操作這台加油機嗎？" },
+                { en: "Does this machine take international credit cards at the pump?", zh: "這台機器在外面可以直接刷國際信用卡嗎？" },
+                { en: "My credit card was declined at the pump. Can I pay inside?", zh: "我的卡在加油機被拒絕了。我可以進去付嗎？" },
+                { en: "I'd like to put 40 dollars on pump number 5, please.", zh: "麻煩在 5 號加油機加 40 美元的油。" },
+                { en: "Which grade of gas does a standard rental car normally take?", zh: "一般的租用車通常加哪個等級的油？" },
+                { en: "Just regular unleaded gas, please.", zh: "只要加普通的無鉛汽油就好。" },
+                { en: "Do you have a public restroom we can use?", zh: "你們有我們可以使用的公共廁所嗎？" },
+                { en: "Can I get the key or the passcode to the restroom?", zh: "我可以拿廁所的鑰匙或密碼嗎？" },
+                { en: "The pump isn't printing my receipt. Could you print it inside?", zh: "加油機印不出收據。能幫我在裡面印嗎？" },
+                { en: "Is there an air pump for checking tires around here?", zh: "這附近有可以用來檢查輪胎的打氣機嗎？" },
+                { en: "Could you help me check the tire pressure?", zh: "你能幫我檢查一下胎壓嗎？" },
+                { en: "Where inside can I buy some engine oil and coolant?", zh: "我在裡面哪裡可以買到機油和冷卻液？" },
+                { en: "How much is a gallon of regular gas here today?", zh: "今天這裡普通汽油一加侖多少錢？" },
+                { en: "The squeegee is missing from the windshield cleaning bucket.", zh: "清潔擋風玻璃的桶子裡沒有刮水刀。" },
+                { en: "We'd like to buy some snacks and drinks for the road trip.", zh: "我們想買些零食和飲料在路上吃。" },
+                { en: "Do you sell charging cables or phone mounts for the car?", zh: "你們有賣車用的充電線或手機支架嗎？" },
+                { en: "Is the automatic car wash currently open?", zh: "自動洗車機現在有開放嗎？" },
+                { en: "Can I add a basic car wash to my gas purchase?", zh: "我可以在買油的時候順便加購基本的洗車嗎？" },
+                { en: "Everything is set. Thanks and have a great day.", zh: "都弄好了。謝謝，祝你有美好的一天。" }
+            ],
+            '入住旅館': [
+                { en: "Hello, we would like to check in, please.", zh: "你好，我們想要辦理入住。" },
+                { en: "I have a reservation booked under the name Jeff.", zh: "我有訂房，名字是 Jeff。" },
+                { en: "Here are our passports and the booking confirmation number.", zh: "這些是我們的護照和訂房確認號碼。" },
+                { en: "We booked three rooms for our entire group of seven.", zh: "我們這團七個人總共訂了三間房。" },
+                { en: "Are our three rooms located on the same floor?", zh: "我們的三間房有安排在同一個樓層嗎？" },
+                { en: "Is there a complimentary Wi-Fi connection in the rooms?", zh: "房間裡有提供免費的 Wi-Fi 連線嗎？" },
+                { en: "Could you please give me the current Wi-Fi password?", zh: "可以請你給我目前的 Wi-Fi 密碼嗎？" },
+                { en: "What time is the morning breakfast buffet served?", zh: "早上的自助早餐是幾點供應？" },
+                { en: "Where exactly is the dining area located?", zh: "用餐區確切的位置在哪裡？" },
+                { en: "Could we request an extra rollaway bed in one of our rooms?", zh: "我們可以要求在其中一間房加一張摺疊床嗎？" },
+                { en: "We need some extra bath towels and pillows, please.", zh: "我們需要一些額外的浴巾和枕頭，謝謝。" },
+                { en: "Can I request a late checkout for tomorrow afternoon?", zh: "我可以要求明天下午延遲退房嗎？" },
+                { en: "What is the standard checkout time for this hotel?", zh: "這間飯店標準的退房時間是幾點？" },
+                { en: "Does the hotel have a fitness center or an indoor pool?", zh: "飯店裡有健身中心或室內游泳池嗎？" },
+                { en: "Where can I find the ice machine or vending machine on this floor?", zh: "我在這個樓層哪裡可以找到製冰機或販賣機？" },
+                { en: "My room key card doesn't seem to be working. Could you reset it?", zh: "我的房卡好像沒反應。能幫我重設嗎？" },
+                { en: "Could you send someone to help us bring our luggage upstairs?", zh: "可以派人幫我們把行李拿上樓嗎？" },
+                { en: "Is parking included in our room rate, or is there an extra daily fee?", zh: "停車費包含在房價內，還是有每天額外的費用？" },
+                { en: "Could we schedule a wake-up call for 7 AM tomorrow?", zh: "我們可以設定明天早上 7 點的晨喚服務嗎？" },
+                { en: "Can we leave our luggage at the front desk after we check out?", zh: "我們退房後可以把行李寄放在櫃台嗎？" }
+            ],
+            '租車': [
+                { en: "Hi, I have a vehicle reservation for pickup today.", zh: "你好，我今天有預約要取車。" },
+                { en: "Here is my driver's license, international driving permit, and credit card.", zh: "這是我的駕照、國際駕照和信用卡。" },
+                { en: "I'd like to add an additional driver to the rental contract.", zh: "我想在租車合約上增加一位額外駕駛。" },
+                { en: "Does the daily rate include unlimited mileage?", zh: "這個日租價格有包含無限里程嗎？" },
+                { en: "What kind of basic insurance coverage is included by default?", zh: "預設包含哪種基本的保險理賠？" },
+                { en: "I'd like to purchase the full coverage insurance just to be safe.", zh: "為了安全起見，我想購買全險。" },
+                { en: "Do you have GPS navigation systems or Wi-Fi hotspots available for rent?", zh: "你們有 GPS 導航或 Wi-Fi 分享器可以租嗎？" },
+                { en: "Could we upgrade to a larger SUV or minivan since we have seven people?", zh: "因為我們有七個人，可以升級成更大的休旅車或廂型車嗎？" },
+                { en: "What specific type of fuel does this vehicle take?", zh: "這輛車要加哪一種特定的燃料？" },
+                { en: "Do I need to return the car with a completely full tank of gas?", zh: "我還車時需要把油箱完全加滿嗎？" },
+                { en: "Where exactly should I drop off the keys when returning the car?", zh: "還車時我確切該把鑰匙交還到哪裡？" },
+                { en: "Is there an extra fee for returning the car to a different airport location?", zh: "在不同機場還車有額外的費用嗎？" },
+                { en: "What phone number should I call if the car breaks down on the highway?", zh: "如果車在高速公路上拋錨，我該打哪支電話？" },
+                { en: "I noticed a scratch on the back bumper. Can you document this before I leave?", zh: "我注意到後保險桿有刮痕。你能在我離開前記錄下來嗎？" },
+                { en: "Could you quickly show me how to open the trunk and the gas cap?", zh: "你能快速教我怎麼開後車廂和油箱蓋嗎？" },
+                { en: "How do I turn on the headlights and the windshield wipers?", zh: "我要怎麼打開大燈和雨刷？" },
+                { en: "Is there a USB port for charging our phones inside the car?", zh: "車內有可以充手機的 USB 插孔嗎？" },
+                { en: "The tire pressure warning light came on. Can you check it before we leave?", zh: "胎壓警告燈亮了。我們出發前你能檢查一下嗎？" },
+                { en: "Can I extend the rental period for a few more days if needed?", zh: "如果需要，我可以延長幾天租期嗎？" },
+                { en: "Thank you for your help, I'll go pick up the car in lot B right now.", zh: "謝謝你的幫忙，我現在去 B 區取車。" }
+            ]
+        };
+
+        if (typeof Vue === 'undefined') {
+            document.getElementById('error-box').style.display = 'block';
+            document.getElementById('error-box').innerHTML = `<h3>⚠️ 找不到 Vue 引擎，請檢查網路。</h3>`;
+        } else {
+            document.getElementById('app').style.display = 'block';
+
+            const app = Vue.createApp({
+                data() {
+                    return {
+                        currentTab: 'bank',
+                        searchQuery: '', loading: false, 
+                        wordBank: [], quizWords: [], currentQuizIndex: 0, isFlipped: false, 
+                        showEditModal: false, editingOriginalWord: null, editData: { word: '', phonetic: '', chinese: '', examples: [], chinese_ex: [] },
+                        
+                        showStarredOnly: false,
+                        filterLetter: '', // A-Z 篩選狀態
+                        alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+                        quizStarredOnly: false,
+                        isQuizRunning: false,
+
+                        scenarioData: {},
+                        activeCategory: '面試', // 預設顯示面試
+                        
+                        // 🌟 Toast 提示框狀態
+                        showToast: false,
+                        toastMessage: ''
+                    }
+                },
+                computed: {
+                    currentCard() { return this.quizWords[this.currentQuizIndex] || { examples: [], chinese_ex: [] }; },
+                    filteredBank() {
+                        let result = this.wordBank;
+                        // 1. 重點篩選
+                        if (this.showStarredOnly) { 
+                            result = result.filter(w => w.starred); 
+                        }
+                        // 2. 字母篩選
+                        if (this.filterLetter) {
+                            result = result.filter(w => w.word.toUpperCase().startsWith(this.filterLetter));
+                        }
+                        
+                        // 3. 排序：如果有選字母，為了方便閱讀，自動按 A-Z 排列；沒選的話就最新優先
+                        if (this.filterLetter) {
+                            return result.slice().sort((a, b) => a.word.localeCompare(b.word));
+                        }
+                        return result;
+                    },
+                    starredWordsCount() { return this.wordBank.filter(w => w.starred).length; }
+                },
+                mounted() {
+                    // 初始化單字庫
+                    let localData = JSON.parse(localStorage.getItem('myFlashcards_v14') || '[]');
+                    let newWordsFromDB = [];
+                    if (typeof COMPRESSED_DB !== 'undefined') {
+                        newWordsFromDB = COMPRESSED_DB
+                            .filter(item => Array.isArray(item) && item.length > 0 && item[0])
+                            .map(item => ({
+                                word: item[0], phonetic: "", chinese: item[1],
+                                examples: item[2] ? item[2].split('|') : [], chinese_ex: item[3] ? item[3].split('|') : [],
+                                starred: false
+                            }));
+                    }
+                    newWordsFromDB.forEach(newWord => {
+                        let exists = localData.some(localWord => localWord.word.toLowerCase() === newWord.word.toLowerCase());
+                        if (!exists) { localData.push(newWord); }
+                    });
+                    this.wordBank = localData;
+                    localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+
+                    // 初始化情境句型
+                    let parsedScenarios = JSON.parse(JSON.stringify(SCENARIO_DB));
+                    for (let key in parsedScenarios) {
+                        parsedScenarios[key].forEach(p => p.show = false);
+                    }
+                    this.scenarioData = parsedScenarios;
+                },
+                methods: {
+                    // 🌟 呼叫 Toast 提示框的共用函數
+                    notify(msg) {
+                        this.toastMessage = msg;
+                        this.showToast = true;
+                        setTimeout(() => { this.showToast = false; }, 3000); // 3秒後自動消失
+                    },
+                    
+                    async translate(text) {
+                        try {
+                            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURI(text)}`);
+                            const data = await res.json();
+                            return data[0][0][0];
+                        } catch (e) { return "翻譯失敗"; }
+                    },
+                    async searchAndAddWord() {
+                        const wordToSearch = this.searchQuery.trim().toLowerCase();
+                        if (!wordToSearch) return;
+                        if (this.wordBank.some(w => w.word.toLowerCase() === wordToSearch)) {
+                            this.notify("✅ 這個單字已經在你的單字庫囉！");
+                            this.searchQuery = ''; return;
+                        }
+                        this.loading = true;
+                        try {
+                            const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${wordToSearch}`);
+                            if (!dictRes.ok) throw new Error("API_NOT_FOUND");
+                            const dictData = await dictRes.json();
+                            const entry = dictData[0];
+                            let rawExs = [];
+                            entry.meanings.forEach(m => { m.definitions.forEach(d => { if (d.example) rawExs.push(d.example); }); });
+                            if (rawExs.length === 0) {
+                                entry.meanings.forEach(m => { m.definitions.forEach(d => { if (d.definition) rawExs.push(d.definition); }); });
+                            }
+                            const [zhWord, ...zhExs] = await Promise.all([ this.translate(entry.word), ...rawExs.map(ex => this.translate(ex)) ]);
+                            this.wordBank.unshift({
+                                word: entry.word, phonetic: entry.phonetic || (entry.phonetics && entry.phonetics[0] ? entry.phonetics[0].text : ''),
+                                chinese: zhWord, examples: rawExs, chinese_ex: zhExs, starred: false
+                            });
+                            localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                            this.searchQuery = '';
+                            this.notify(`🎉 成功新增單字: ${entry.word}`);
+                        } catch (e) { 
+                            // 🌟 強化錯誤攔截機制，清楚告知原因
+                            if (e.message === "API_NOT_FOUND") {
+                                this.notify("❌ 字典查無此字！請改用下方的『手動新增』。"); 
+                            } else {
+                                this.notify("⚠️ 連線異常 (Failed to fetch)！可能是免費 API 不穩，請改用『手動新增』。");
+                            }
+                        }
+                        this.loading = false;
+                    },
+                    
+                    toggleStar(wordObj) {
+                        wordObj.starred = !wordObj.starred;
+                        localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                    },
+                    
+                    // 🌟 新增：在測驗中快速標記單字的函數
+                    toggleStarInQuiz(card) {
+                        let target = this.wordBank.find(w => w.word === card.word);
+                        if (target) {
+                            target.starred = !target.starred;
+                            card.starred = target.starred; 
+                            localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                            this.notify(target.starred ? "⭐ 已加入重點單字庫！" : "☆ 已取消標記");
+                        }
+                    },
+
+                    removeFromBank(wordObj) {
+                        if(confirm(`確定要刪除 "${wordObj.word}" 嗎？`)) {
+                            this.wordBank = this.wordBank.filter(w => w.word !== wordObj.word);
+                            localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                            this.notify("🗑️ 單字已刪除");
+                        }
+                    },
+                    // 🌟 新增：開啟手動新增單字的視窗
+                    openManualAddModal() {
+                        this.editingOriginalWord = null; 
+                        this.editData = { word: this.searchQuery.trim(), phonetic: '', chinese: '', examples: [], chinese_ex: [], starred: false };
+                        this.showEditModal = true;
+                    },
+                    openEditModal(wordObj) {
+                        this.editingOriginalWord = wordObj.word;
+                        this.editData = JSON.parse(JSON.stringify(wordObj));
+                        this.showEditModal = true;
+                    },
+                    closeEditModal() { this.showEditModal = false; this.editingOriginalWord = null; },
+                    saveEdit() {
+                        if (!this.editData.word.trim()) { this.notify("⚠️ 英文單字不能為空白！"); return; }
+                        
+                        if (this.editingOriginalWord) {
+                            // 編輯現有單字
+                            let index = this.wordBank.findIndex(w => w.word === this.editingOriginalWord);
+                            if (index !== -1) {
+                                this.wordBank[index] = JSON.parse(JSON.stringify(this.editData));
+                            }
+                        } else {
+                            // 手動新增單字：檢查是否重複
+                            if (this.wordBank.some(w => w.word.toLowerCase() === this.editData.word.trim().toLowerCase())) {
+                                this.notify("⚠️ 這個單字已經存在囉！");
+                                return;
+                            }
+                            this.wordBank.unshift(JSON.parse(JSON.stringify(this.editData)));
+                        }
+                        
+                        localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                        this.notify(this.editingOriginalWord ? "💾 編輯已儲存" : "🎉 手動新增成功！");
+                        this.searchQuery = '';
+                        this.closeEditModal();
+                    },
+                    
+                    // 🌟 新增：匯出備份資料功能
+                    exportData() {
+                        const dataStr = JSON.stringify(this.wordBank, null, 2);
+                        const blob = new Blob([dataStr], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "My_English_Words.json";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        this.notify("✅ 備份檔已下載！換手機時請使用此檔案匯入。");
+                    },
+                    
+                    // 🌟 新增：匯入備份資料功能
+                    importData(event) {
+                        const file = event.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const importedData = JSON.parse(e.target.result);
+                                if (Array.isArray(importedData)) {
+                                    let addedCount = 0;
+                                    // 確保最新的單字會插在前面，且不覆蓋現有的單字
+                                    importedData.reverse().forEach(newWord => {
+                                        if (!this.wordBank.some(w => w.word.toLowerCase() === newWord.word.toLowerCase())) {
+                                            this.wordBank.unshift(newWord);
+                                            addedCount++;
+                                        }
+                                    });
+                                    localStorage.setItem('myFlashcards_v14', JSON.stringify(this.wordBank));
+                                    this.notify(`✅ 成功匯入並合併 ${addedCount} 個新單字！`);
+                                } else {
+                                    this.notify("❌ 檔案格式錯誤，請確定是之前匯出的 .json 檔。");
+                                }
+                            } catch (err) {
+                                this.notify("❌ 讀取檔案失敗！");
+                            }
+                            event.target.value = ''; // 清空 input 讓下次選同個檔案也能正常觸發
+                        };
+                        reader.readAsText(file);
+                    },
+
+                    addExample() {
+                        if (!this.editData.examples) this.editData.examples = [];
+                        if (!this.editData.chinese_ex) this.editData.chinese_ex = [];
+                        this.editData.examples.push(''); this.editData.chinese_ex.push('');
+                    },
+                    removeExample(index) {
+                        this.editData.examples.splice(index, 1); this.editData.chinese_ex.splice(index, 1);
+                    },
+                    speak(text) {
+                        window.speechSynthesis.cancel();
+                        const msg = new SpeechSynthesisUtterance(text); msg.lang = 'en-US'; msg.rate = 0.9; 
+                        window.speechSynthesis.speak(msg);
+                    },
+                    startQuiz() {
+                        let pool = this.quizStarredOnly ? this.wordBank.filter(w => w.starred) : this.wordBank;
+                        
+                        if (pool.length === 0) { 
+                            this.notify(this.quizStarredOnly ? "⚠️ 你還沒有標記任何重點單字喔！" : "⚠️ 單字庫目前是空的！");
+                            return; 
+                        }
+
+                        // 🌟 終極修復：Fisher-Yates 完美隨機洗牌演算法
+                        let shuffledPool = [...pool];
+                        for (let i = shuffledPool.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [shuffledPool[i], shuffledPool[j]] = [shuffledPool[j], shuffledPool[i]]; // 交換位置
+                        }
+                        
+                        // 洗牌完成後，精準抽出前 10 個單字
+                        let selectedWords = shuffledPool.slice(0, 10);
+
+                        this.quizWords = JSON.parse(JSON.stringify(selectedWords)).map(card => {
+                            let pairs = [];
+                            if (card.examples && card.chinese_ex) {
+                                for(let i=0; i<card.examples.length; i++) { pairs.push({ en: card.examples[i], zh: card.chinese_ex[i] }); }
+                            }
+                            if (pairs.length > 2) { 
+                                for (let i = pairs.length - 1; i > 0; i--) {
+                                    const j = Math.floor(Math.random() * (i + 1));
+                                    [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+                                }
+                                pairs = pairs.slice(0, 2); 
+                            }
+                            card.examples = pairs.map(p => p.en); card.chinese_ex = pairs.map(p => p.zh);
+                            return card;
+                        });
+                        
+                        this.currentQuizIndex = 0; 
+                        this.isFlipped = false; 
+                        this.isQuizRunning = true;
+                    },
+                    flipCard() { this.isFlipped = !this.isFlipped; },
+                    nextCard() {
+                        if (this.currentQuizIndex < this.quizWords.length - 1) {
+                            this.isFlipped = false; setTimeout(() => { this.currentQuizIndex++; }, 150);
+                        }
+                    },
+                    prevCard() {
+                        if (this.currentQuizIndex > 0) {
+                            this.isFlipped = false; setTimeout(() => { this.currentQuizIndex--; }, 150);
+                        }
+                    },
+                    finishQuiz() { 
+                        this.isQuizRunning = false;
+                        this.currentTab = 'bank'; 
+                    }
+                }
+            });
+            app.mount('#app');
+        }
+    </script>
+</body>
+</html>
